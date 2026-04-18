@@ -745,24 +745,30 @@ function updateListenScoreRow(){
 }
 
 
+
 // ══════════════════════════════════════════════════════════════
-//  SPEAKING — 3 modes, 30 phrases, interactive phonetics
+//  SPEAKING — Practicar con reconocimiento de voz
 // ══════════════════════════════════════════════════════════════
 const micTimers={};
 let speakMode='normal', speakLevelFilter='all';
 let spPracticedToday=0, spTotalSession=0;
-let shadowStep={}; // {idx: 'listen'|'speak'|'done'}
+let shadowStep={};
 
-function setSpeakMode(mode, btn){
+// ── SPEECH RECOGNITION SETUP ─────────────────────────────────
+const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+let srSupported = !!SpeechRecognition;
+let activeRecognition = null;
+
+function setSpeakMode(mode,btn){
   speakMode=mode;
   document.querySelectorAll('.vocab-mode-row .mode-btn').forEach(b=>b.classList.remove('active'));
   btn.classList.add('active');
-  document.getElementById('speakCardsWrap').style.display = mode==='phonetic'?'none':'block';
-  document.getElementById('speakPhoneticWrap').style.display = mode==='phonetic'?'block':'none';
+  document.getElementById('speakCardsWrap').style.display=mode==='phonetic'?'none':'block';
+  document.getElementById('speakPhoneticWrap').style.display=mode==='phonetic'?'block':'none';
   if(mode!=='phonetic') buildSpeakCards();
 }
 
-function setSpeakLevel(level, btn){
+function setSpeakLevel(level,btn){
   speakLevelFilter=level;
   document.querySelectorAll('.vocab-level-row .lvl-btn').forEach(b=>b.classList.remove('active'));
   btn.classList.add('active');
@@ -778,179 +784,244 @@ function buildSpeaking(){
 
 // ── SENTENCE OF THE DAY ──────────────────────────────────────
 function renderSentenceOfDay(){
-  const idx = new Date().getDate() % SPEAKING.length;
-  const p = SPEAKING[idx];
-  const de = document.getElementById('dailySpeakDE');
-  const es = document.getElementById('dailySpeakES');
-  if(de) de.textContent = p.de;
-  if(es) es.textContent = p.es;
+  const idx=new Date().getDate()%SPEAKING.length;
+  const p=SPEAKING[idx];
+  const de=document.getElementById('dailySpeakDE');
+  const es=document.getElementById('dailySpeakES');
+  if(de) de.textContent=p.de;
+  if(es) es.textContent=p.es;
 }
 
 function playSentenceOfDay(){
-  const idx = new Date().getDate() % SPEAKING.length;
-  const p = SPEAKING[idx];
-  speakGerman(p.de, p.audioId);
+  const idx=new Date().getDate()%SPEAKING.length;
+  const p=SPEAKING[idx];
+  speakGerman(p.de,p.audioId||null);
   const st=document.getElementById('dailyStatus');
-  if(st){ st.textContent='▶ Escuchando…'; setTimeout(()=>{ st.textContent='✓ Ahora repítelo en voz alta'; },1500); }
+  if(st){ st.textContent='▶ Escuchando…'; setTimeout(()=>{ st.textContent='✓ Ahora repítelo en voz alta'; },1800); }
 }
 
 let dailyMicTimer=null;
 function toggleDailyMic(){
   const lbl=document.getElementById('dailyMicLabel');
   const st=document.getElementById('dailyStatus');
-  if(dailyMicTimer){
-    clearTimeout(dailyMicTimer); dailyMicTimer=null;
-    if(lbl) lbl.textContent='Practicar';
-    if(st) st.textContent='✓ ¡Bien! Escúchate y compara.';
-    addXP(5,'pronunciación'); completeGoal(2);
-    spPracticedToday++; spTotalSession++; updateSpeakStats();
-  } else {
-    if(lbl) lbl.textContent='Detener';
-    if(st) st.textContent='🔴 Grabando… ¡Habla ahora!';
-    dailyMicTimer=setTimeout(()=>{
-      dailyMicTimer=null;
-      if(lbl) lbl.textContent='Practicar';
-      if(st) st.textContent='✓ ¡Grabado! Compara con el original.';
+  const idx=new Date().getDate()%SPEAKING.length;
+  const p=SPEAKING[idx];
+  if(srSupported){
+    startRecognition(p.de, null, lbl, st, ()=>{
       addXP(5,'pronunciación'); completeGoal(2);
       spPracticedToday++; spTotalSession++; updateSpeakStats();
-    },4000);
+    });
+  } else {
+    // Fallback timer
+    if(dailyMicTimer){ clearTimeout(dailyMicTimer); dailyMicTimer=null; if(lbl) lbl.textContent='Practicar'; if(st) st.textContent='✓ ¡Listo!'; addXP(5,'pronunciación'); completeGoal(2); spPracticedToday++; spTotalSession++; updateSpeakStats(); }
+    else{ if(lbl) lbl.textContent='Detener'; if(st) st.textContent='🔴 Grabando…'; dailyMicTimer=setTimeout(()=>{ dailyMicTimer=null; if(lbl) lbl.textContent='Practicar'; if(st) st.textContent='✓ ¡Grabado!'; addXP(5,'pronunciación'); completeGoal(2); spPracticedToday++; spTotalSession++; updateSpeakStats(); },4000); }
   }
+}
+
+// ── SPEECH RECOGNITION ENGINE ────────────────────────────────
+function startRecognition(targetText, audioId, btnEl, statusEl, onDone){
+  // Stop any ongoing recognition
+  if(activeRecognition){ try{ activeRecognition.stop(); }catch(e){} activeRecognition=null; }
+
+  if(!srSupported){
+    if(statusEl) statusEl.innerHTML='⚠️ Tu navegador no soporta reconocimiento de voz.<br><small>Usa Chrome en Android para esta función.</small>';
+    return;
+  }
+
+  const sr=new SpeechRecognition();
+  sr.lang='de-DE';
+  sr.continuous=false;
+  sr.interimResults=true;
+  sr.maxAlternatives=3;
+  activeRecognition=sr;
+
+  if(btnEl){ btnEl.textContent='⏹ Detener'; btnEl.classList.add('rec'); }
+  if(statusEl) statusEl.innerHTML='🔴 <strong>Escuchando…</strong> Habla ahora en alemán';
+
+  sr.onresult=function(e){
+    let best='', bestConf=0;
+    // Try all alternatives across results
+    for(let ri=0;ri<e.results.length;ri++){
+      for(let ai=0;ai<e.results[ri].length;ai++){
+        const alt=e.results[ri][ai];
+        if(alt.confidence>bestConf){ bestConf=alt.confidence; best=alt.transcript; }
+      }
+      // Always grab final result even if confidence=0
+      if(e.results[ri].isFinal && best==='') best=e.results[ri][0].transcript;
+    }
+    if(e.results[e.results.length-1].isFinal){
+      activeRecognition=null;
+      if(btnEl){ btnEl.textContent='🎤 Reintentar'; btnEl.classList.remove('rec'); }
+      showPronFeedback(best, targetText, statusEl);
+      if(onDone) onDone(best);
+    } else {
+      // Show interim
+      if(statusEl) statusEl.innerHTML='🎙️ <em>'+best+'</em>';
+    }
+  };
+
+  sr.onerror=function(e){
+    activeRecognition=null;
+    if(btnEl){ btnEl.textContent='🎤 Reintentar'; btnEl.classList.remove('rec'); }
+    const msgs={
+      'no-speech':'No se detectó voz. ¿Está el micrófono activado?',
+      'not-allowed':'Permiso de micrófono denegado. Actívalo en el navegador.',
+      'network':'Error de red. Comprueba la conexión.',
+      'audio-capture':'No se encontró micrófono.',
+    };
+    if(statusEl) statusEl.innerHTML='⚠️ '+(msgs[e.error]||'Error: '+e.error);
+  };
+
+  sr.onend=function(){
+    if(activeRecognition===sr) activeRecognition=null;
+    if(btnEl && btnEl.classList.contains('rec')){ btnEl.textContent='🎤 Reintentar'; btnEl.classList.remove('rec'); if(statusEl && !statusEl.querySelector('.pron-result')) statusEl.innerHTML='⚠️ No se detectó voz. Inténtalo de nuevo.'; }
+  };
+
+  sr.start();
+}
+
+// ── PRONUNCIATION FEEDBACK ────────────────────────────────────
+function normWord(w){
+  return w.toLowerCase()
+    .replace(/[äÄ]/g,'a').replace(/[öÖ]/g,'o').replace(/[üÜ]/g,'u')
+    .replace(/ß/g,'ss').replace(/[!?,.:;'"]/g,'').trim();
+}
+
+function levenshtein(a,b){
+  const m=a.length,n=b.length,dp=[];
+  for(let i=0;i<=m;i++){ dp[i]=[i]; }
+  for(let j=0;j<=n;j++){ dp[0][j]=j; }
+  for(let i=1;i<=m;i++) for(let j=1;j<=n;j++)
+    dp[i][j]=a[i-1]===b[j-1]?dp[i-1][j-1]:1+Math.min(dp[i-1][j],dp[i][j-1],dp[i-1][j-1]);
+  return dp[m][n];
+}
+
+function showPronFeedback(heard, target, statusEl){
+  if(!heard || !statusEl) return;
+
+  const targetWords = target.split(/\s+/).filter(Boolean);
+  const heardWords  = heard.split(/\s+/).filter(Boolean);
+
+  // Match each target word to best heard word
+  let correct=0, html='<div class="pron-result">';
+  html+='<div class="pron-heard">🎙️ Escuchado: <em>'+heard+'</em></div>';
+  html+='<div class="pron-words">';
+
+  targetWords.forEach(tw=>{
+    const tn=normWord(tw);
+    // Find best match in heard words
+    let bestDist=999, bestWord='';
+    heardWords.forEach(hw=>{ const d=levenshtein(tn,normWord(hw)); if(d<bestDist){ bestDist=d; bestWord=hw; } });
+    const maxDist=Math.max(1,Math.floor(tn.length*0.35));
+    const ok=bestDist<=maxDist;
+    if(ok) correct++;
+    html+='<span class="pw '+(ok?'pw-ok':'pw-err')+'">'+tw+'</span> ';
+  });
+
+  html+='</div>';
+
+  // Score
+  const pct=Math.round(correct/targetWords.length*100);
+  let emoji, msg, color;
+  if(pct===100){      emoji='🌟'; msg='¡Perfecto! Pronunciación excelente.';    color='var(--mint-d)'; }
+  else if(pct>=80){   emoji='✅'; msg='¡Muy bien! Casi perfecto.';               color='var(--mint-d)'; }
+  else if(pct>=60){   emoji='👍'; msg='Bien, pero practica las palabras en rojo.';color='var(--b1c)'; }
+  else if(pct>=40){   emoji='💪'; msg='Sigue intentándolo. ¡Tú puedes!';          color='var(--orange)'; }
+  else{               emoji='🔄'; msg='Escucha el original e inténtalo de nuevo.'; color='var(--coral)'; }
+
+  html+='<div class="pron-score" style="color:'+color+'">'+emoji+' '+pct+'% — '+msg+'</div>';
+  html+='</div>';
+
+  statusEl.innerHTML=html;
+
+  // XP based on score
+  const xpEarned=pct>=80?10:pct>=60?5:2;
+  addXP(xpEarned,'pronunciación');
+  if(pct>=60){ increaseCombo(); completeGoal(2); }
+  spPracticedToday++; spTotalSession++; updateSpeakStats();
+
+  // Badge check
+  if(pct===100) earnBadge('perfect5');
 }
 
 // ── SPEAK CARDS ──────────────────────────────────────────────
 function buildSpeakCards(){
   const c=document.getElementById('speakCards'); c.innerHTML='';
-  const phrases = speakLevelFilter==='all'
-    ? SPEAKING
-    : SPEAKING.filter(p=>p.level===speakLevelFilter);
+  const phrases=speakLevelFilter==='all'?SPEAKING:SPEAKING.filter(p=>p.level===speakLevelFilter);
 
-  // Section headers per level
   let lastLevel='';
   phrases.forEach((p,i)=>{
-    const realIdx = SPEAKING.indexOf(p);
-    if(p.level!==lastLevel && speakLevelFilter==='all'){
+    const realIdx=SPEAKING.indexOf(p);
+    if(p.level!==lastLevel&&speakLevelFilter==='all'){
       lastLevel=p.level;
-      const hdr=document.createElement('div');
-      hdr.className='speak-level-header';
+      const hdr=document.createElement('div'); hdr.className='speak-level-header';
       const colors={A1:'var(--a1c)',A2:'var(--a2c)',B1:'var(--b1c)'};
       const bgs={A1:'var(--mint-light)',A2:'var(--sky-light)',B1:'var(--sun-light)'};
       hdr.innerHTML='<span style="background:'+bgs[p.level]+';color:'+colors[p.level]+';padding:3px 10px;border-radius:8px;font-weight:800;font-size:0.75rem;">'+p.level+'</span>';
       c.appendChild(hdr);
     }
 
-    const el=document.createElement('div');
-    el.className='speak-card';
+    const el=document.createElement('div'); el.className='speak-card';
 
     if(speakMode==='shadow'){
-      // SHADOWING MODE: listen → pause → speak → compare
       shadowStep[realIdx]=shadowStep[realIdx]||'ready';
-      el.innerHTML=buildShadowCard(p, realIdx);
+      el.innerHTML=buildShadowCard(p,realIdx);
     } else {
-      // NORMAL MODE
+      // PRACTICAR mode — with speech recognition
+      const audioId=p.audioId||'';
+      const de_escaped=p.de.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
       el.innerHTML=
         '<div class="speak-card-top">'+
           '<div class="speak-de">'+p.de+'</div>'+
-          '<button class="speak-play-btn" onclick="speakGerman(\''+p.de.replace(/'/g,"\\'")+'\',"'+( p.audioId||'')+'")" title="Escuchar">🔊</button>'+
+          '<button class="speak-play-btn" onclick="speakGerman(\''+de_escaped+'\',\''+audioId+'\')" title="Escuchar">🔊</button>'+
         '</div>'+
         '<div class="speak-es">'+p.es+'</div>'+
-        '<button class="mic-btn" id="mic'+realIdx+'" onclick="toggleMic('+realIdx+')">🎤</button>'+
-        '<div class="mic-status" id="mics'+realIdx+'">Toca para practicar esta frase</div>'+
-        '<div class="speak-tip">💡 '+p.tip+'</div>';
+        '<div class="speak-tip">💡 '+p.tip+'</div>'+
+        '<div class="pron-actions">'+
+          '<button class="pron-listen-btn" onclick="speakGerman(\''+de_escaped+'\',\''+audioId+'\')">🔊 Escuchar primero</button>'+
+          '<button class="pron-rec-btn" id="recbtn'+realIdx+'" onclick="startPronRec('+realIdx+',\''+de_escaped+'\',\''+audioId+'\')">'+
+            (srSupported?'🎤 Grabar y analizar':'🎤 Practicar')+
+          '</button>'+
+        '</div>'+
+        '<div class="pron-status" id="pronst'+realIdx+'">'+
+          (srSupported?'Escucha el audio y luego graba tu pronunciación':'Toca para practicar esta frase')+
+        '</div>';
     }
     c.appendChild(el);
   });
 }
 
-function buildShadowCard(p, i){
-  const step = shadowStep[i]||'ready';
-  const audioId = p.audioId||'';
-  return '<div class="shadow-card">'+
-    '<div class="speak-de">'+p.de+'</div>'+
-    '<div class="speak-es">'+p.es+'</div>'+
-    '<div class="shadow-steps">'+
-      '<div class="shadow-step'+(step==='ready'||step==='listen'?' active':step==='speak'||step==='done'?' done':'')+'" id="ss1_'+i+'">'+
-        '<span class="ss-num">1</span> <span>Escuchar</span>'+
-        '<button class="ss-btn" onclick="shadowListen('+i+',\''+p.de.replace(/'/g,"\\'")+'\',"'+audioId+'")">▶ Oír</button>'+
-      '</div>'+
-      '<div class="shadow-step'+(step==='speak'?' active':step==='done'?' done':'')+'" id="ss2_'+i+'">'+
-        '<span class="ss-num">2</span> <span>Repetir</span>'+
-        '<button class="ss-btn" id="ssmicbtn'+i+'" onclick="shadowSpeak('+i+')">🎤 Hablar</button>'+
-      '</div>'+
-      '<div class="shadow-step'+(step==='done'?' active':'')+'" id="ss3_'+i+'">'+
-        '<span class="ss-num">3</span> <span>Comparar</span>'+
-        '<button class="ss-btn" onclick="shadowCompare('+i+',\''+p.de.replace(/'/g,"\\'")+'\',"'+audioId+'")">▶ Original</button>'+
-      '</div>'+
-    '</div>'+
-    '<div class="mic-status" id="shadowst'+i+'">Empieza escuchando el audio</div>'+
-    '</div>';
-}
+function startPronRec(idx, targetText, audioId){
+  const btn=document.getElementById('recbtn'+idx);
+  const st=document.getElementById('pronst'+idx);
 
-function shadowListen(i, text, audioId){
-  shadowStep[i]='listen';
-  speakGerman(text, audioId||null);
-  const st=document.getElementById('shadowst'+i);
-  if(st) st.textContent='Escuchando… luego haz clic en "Hablar"';
-  // Highlight step 2 after delay
-  setTimeout(()=>{
-    shadowStep[i]='speak';
-    const s2=document.getElementById('ss2_'+i);
-    if(s2){ s2.classList.add('active'); }
-    if(st) st.textContent='✓ Oído. Ahora repítelo tú.';
-  },2000);
-}
-
-function shadowSpeak(i){
-  const btn=document.getElementById('ssmicbtn'+i);
-  const st=document.getElementById('shadowst'+i);
-  if(!btn) return;
-  if(btn._recording){
-    clearTimeout(btn._timer); btn._recording=false;
-    btn.textContent='🎤 Hablar';
-    shadowStep[i]='done';
-    if(st) st.textContent='✓ ¡Grabado! Ahora compara con el original.';
-    const s3=document.getElementById('ss3_'+i);
-    if(s3) s3.classList.add('active');
-    addXP(8,'shadowing'); completeGoal(2);
-    spPracticedToday++; spTotalSession++; updateSpeakStats();
-  } else {
-    btn._recording=true; btn.textContent='⏹ Detener';
-    if(st) st.textContent='🔴 Grabando… ¡Habla ahora!';
-    btn._timer=setTimeout(()=>{
-      btn._recording=false; btn.textContent='🎤 Repetir';
-      shadowStep[i]='done';
-      if(st) st.textContent='✓ ¡Grabado! Ahora compara con el original.';
-      const s3=document.getElementById('ss3_'+i);
-      if(s3) s3.classList.add('active');
-      addXP(8,'shadowing'); completeGoal(2);
-      spPracticedToday++; spTotalSession++; updateSpeakStats();
-    },4000);
+  // If already recording, stop
+  if(btn&&btn.classList.contains('rec')){
+    if(activeRecognition){ try{ activeRecognition.stop(); }catch(e){} }
+    return;
   }
-}
 
-function shadowCompare(i, text, audioId){
-  speakGerman(text, audioId||null);
-  const st=document.getElementById('shadowst'+i);
-  if(st) st.textContent='🔊 Comparando con el original…';
-}
-
-function toggleMic(i){
-  const mic=document.getElementById('mic'+i), st=document.getElementById('mics'+i);
-  if(micTimers[i]){
-    clearTimeout(micTimers[i]); mic.classList.remove('rec');
-    st.textContent='✓ ¡Grabado! Escúchate y repite.';
-    micTimers[i]=null;
-    addXP(5,'pronunciación'); completeGoal(2);
-    spPracticedToday++; spTotalSession++; updateSpeakStats();
+  if(srSupported){
+    startRecognition(targetText, audioId, btn, st, null);
   } else {
-    mic.classList.add('rec'); st.textContent='🔴 Grabando… ¡Habla ahora!';
-    micTimers[i]=setTimeout(()=>{
-      mic.classList.remove('rec');
-      st.textContent='✓ ¡Grabado! Toca 🔊 para comparar.';
-      micTimers[i]=null;
+    // Fallback: just timer
+    if(btn){ btn.textContent='⏹ Detener'; btn.classList.add('rec'); }
+    if(st) st.textContent='🔴 Grabando… ¡Habla ahora!';
+    const t=setTimeout(()=>{
+      if(btn){ btn.textContent='🎤 Practicar'; btn.classList.remove('rec'); }
+      if(st) st.textContent='✓ ¡Grabado! Escúchate y repite.';
       addXP(5,'pronunciación'); completeGoal(2);
       spPracticedToday++; spTotalSession++; updateSpeakStats();
     },4000);
+    if(btn) btn._fallbackTimer=t;
   }
+}
+
+function toggleMic(i){
+  // Legacy fallback for daily card
+  const mic=document.getElementById('mic'+i),st=document.getElementById('mics'+i);
+  if(micTimers[i]){ clearTimeout(micTimers[i]); mic&&mic.classList.remove('rec'); if(st) st.textContent='✓ ¡Grabado!'; micTimers[i]=null; addXP(5,'pronunciación'); completeGoal(2); spPracticedToday++; spTotalSession++; updateSpeakStats(); }
+  else{ mic&&mic.classList.add('rec'); if(st) st.textContent='🔴 Grabando…'; micTimers[i]=setTimeout(()=>{ mic&&mic.classList.remove('rec'); if(st) st.textContent='✓ ¡Grabado!'; micTimers[i]=null; addXP(5,'pronunciación'); completeGoal(2); spPracticedToday++; spTotalSession++; updateSpeakStats(); },4000); }
 }
 
 function updateSpeakStats(){
@@ -958,34 +1029,96 @@ function updateSpeakStats(){
   const t=document.getElementById('sp-total');     if(t) t.textContent=spTotalSession;
 }
 
+// ── SHADOW MODE ───────────────────────────────────────────────
+function buildShadowCard(p,i){
+  const step=shadowStep[i]||'ready';
+  const audioId=p.audioId||'';
+  const de_escaped=p.de.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
+  return '<div class="shadow-card">'+
+    '<div class="speak-de">'+p.de+'</div>'+
+    '<div class="speak-es">'+p.es+'</div>'+
+    '<div class="shadow-steps">'+
+      '<div class="shadow-step'+(step==='ready'||step==='listen'?' active':step==='speak'||step==='done'?' done':'')+'\" id="ss1_'+i+'">'+
+        '<span class="ss-num">1</span><span>Escuchar</span>'+
+        '<button class="ss-btn" onclick="shadowListen('+i+',\''+de_escaped+'\',\''+audioId+'\')">▶ Oír</button>'+
+      '</div>'+
+      '<div class="shadow-step'+(step==='speak'?' active':step==='done'?' done':'')+'\" id="ss2_'+i+'">'+
+        '<span class="ss-num">2</span><span>Repetir</span>'+
+        '<button class="ss-btn" id="ssmicbtn'+i+'" onclick="shadowSpeak('+i+',\''+de_escaped+'\')">🎤 Hablar</button>'+
+      '</div>'+
+      '<div class="shadow-step'+(step==='done'?' active':'')+'\" id="ss3_'+i+'">'+
+        '<span class="ss-num">3</span><span>Comparar</span>'+
+        '<button class="ss-btn" onclick="shadowCompare('+i+',\''+de_escaped+'\',\''+audioId+'\')">▶ Original</button>'+
+      '</div>'+
+    '</div>'+
+    '<div class="pron-status" id="shadowst'+i+'">Empieza escuchando el audio</div>'+
+    '</div>';
+}
+
+function shadowListen(i,text,audioId){
+  shadowStep[i]='listen'; speakGerman(text,audioId||null);
+  const st=document.getElementById('shadowst'+i);
+  if(st) st.textContent='Escuchando… luego haz clic en Hablar';
+  setTimeout(()=>{ shadowStep[i]='speak'; const s2=document.getElementById('ss2_'+i); if(s2) s2.classList.add('active'); if(st) st.textContent='✓ Oído. Ahora repítelo tú.'; },2000);
+}
+
+function shadowSpeak(i, targetText){
+  const btn=document.getElementById('ssmicbtn'+i);
+  const st=document.getElementById('shadowst'+i);
+  if(!btn) return;
+  if(btn._recording){
+    clearTimeout(btn._timer); btn._recording=false;
+    if(activeRecognition){ try{ activeRecognition.stop(); }catch(e){} }
+  } else {
+    if(srSupported && targetText){
+      startRecognition(targetText, null, btn, st, ()=>{
+        shadowStep[i]='done';
+        const s3=document.getElementById('ss3_'+i); if(s3) s3.classList.add('active');
+        addXP(8,'shadowing'); completeGoal(2);
+        spPracticedToday++; spTotalSession++; updateSpeakStats();
+      });
+    } else {
+      btn._recording=true; btn.textContent='⏹ Detener';
+      if(st) st.textContent='🔴 Grabando… ¡Habla ahora!';
+      btn._timer=setTimeout(()=>{
+        btn._recording=false; btn.textContent='🎤 Repetir';
+        shadowStep[i]='done';
+        if(st) st.textContent='✓ ¡Grabado! Compara con el original.';
+        const s3=document.getElementById('ss3_'+i); if(s3) s3.classList.add('active');
+        addXP(8,'shadowing'); completeGoal(2);
+        spPracticedToday++; spTotalSession++; updateSpeakStats();
+      },4000);
+    }
+  }
+}
+
+function shadowCompare(i,text,audioId){
+  speakGerman(text,audioId||null);
+  const st=document.getElementById('shadowst'+i);
+  if(st) st.textContent='🔊 Comparando con el original…';
+}
+
 // ── PHONETICS ────────────────────────────────────────────────
 function buildPhonetics(){
   const ph=document.getElementById('phonList'); if(!ph) return; ph.innerHTML='';
   PHONETICS.forEach(p=>{
     const el=document.createElement('div'); el.className='ph-row';
+    const tts_escaped=p.tts.replace(/'/g,"\\'");
     el.innerHTML=
       '<div class="ph-badge">'+p.s+'</div>'+
-      '<div style="flex:1">'+
-        '<div class="ph-ex">'+p.ex+'</div>'+
-        '<div class="ph-tip">'+p.tip+'</div>'+
-      '</div>'+
-      '<button class="ph-play" onclick="speakGerman(\''+p.tts+'\',null)" title="Escuchar">🔊</button>';
+      '<div style="flex:1"><div class="ph-ex">'+p.ex+'</div><div class="ph-tip">'+p.tip+'</div></div>'+
+      '<button class="ph-play" onclick="speakGerman(\''+tts_escaped+'\',null)" title="Escuchar">🔊</button>';
     ph.appendChild(el);
   });
 }
 
-function speakGerman(text, audioId){
-  if(audioId){ const a=new Audio('/audio/'+audioId+'.mp3'); a.play().catch(()=>{}); return; }
+function speakGerman(text,audioId){
+  if(audioId&&audioId!==''){ const a=new Audio('/audio/'+audioId+'.mp3'); a.play().catch(()=>{}); return; }
   if(!window.speechSynthesis) return;
   window.speechSynthesis.cancel();
   const u=new SpeechSynthesisUtterance(text); u.lang='de-DE'; u.rate=0.82;
-  function go(){
-    const v=window.speechSynthesis.getVoices().find(v=>v.lang==='de-DE')
-          ||window.speechSynthesis.getVoices().find(v=>v.lang.startsWith('de'));
-    if(v) u.voice=v; window.speechSynthesis.speak(u);
-  }
-  if(window.speechSynthesis.getVoices().length>0) go();
-  else window.speechSynthesis.onvoiceschanged=go;
+  function go(){ const v=window.speechSynthesis.getVoices().find(v=>v.lang==='de-DE')||window.speechSynthesis.getVoices().find(v=>v.lang.startsWith('de')); if(v) u.voice=v; window.speechSynthesis.speak(u); }
+  if(window.speechSynthesis.getVoices().length>0) go(); else window.speechSynthesis.onvoiceschanged=go;
 }
 
 
