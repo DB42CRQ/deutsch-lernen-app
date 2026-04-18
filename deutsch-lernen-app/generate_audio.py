@@ -28,29 +28,29 @@ PAUSE_MS    = 600
 
 DIALOGS = [
   { "id":"dialog_tienda",
-    "parts":["Guten Tag! Was darf es sein?","Ich haette gerne ein Brot und zwei Broetchen, bitte.","Das macht zwei Euro fuenfzig.","Bitte schoen. Auf Wiedersehen!"] },
+    "parts":["Guten Tag! Was darf es sein?","Ich hätte gerne ein Brot und zwei Brötchen, bitte.","Das macht zwei Euro fünfzig.","Bitte schön. Auf Wiedersehen!"] },
   { "id":"dialog_presentacion", "single_voice":True,
     "parts":["Hallo! Ich heisse Sarah.","Ich komme aus Spanien und wohne jetzt in Berlin.","Ich lerne seit drei Monaten Deutsch.","Es macht mir sehr viel Spass!"] },
   { "id":"dialog_rutina", "single_voice":True,
-    "parts":["Ich stehe jeden Morgen um sieben Uhr auf.","Dann fruehstuecke ich und trinke Kaffee.","Um acht Uhr fahre ich mit dem Bus zur Arbeit.","Abends koche ich und sehe fern."] },
+    "parts":["Ich stehe jeden Morgen um sieben Uhr auf.","Dann frühstücke ich und trinke Kaffee.","Um acht Uhr fahre ich mit dem Bus zur Arbeit.","Abends koche ich und sehe fern."] },
   { "id":"dialog_familia", "single_voice":True,
     "parts":["Meine Familie ist nicht sehr gross. Ich habe einen Bruder und eine Schwester.","Mein Bruder heisst Marco und ist zwanzig Jahre alt.","Meine Schwester ist noch jung, sie ist erst zehn Jahre alt."] },
   { "id":"dialog_restaurante",
-    "parts":["Guten Abend! Ich haette gerne die Speisekarte.","Natuerlich! Und zu trinken?","Ein Wasser, bitte.","Und zum Essen?","Ich nehme das Schnitzel mit Pommes.","Sehr gerne. Das macht zusammen vierzehn Euro."] },
+    "parts":["Guten Abend! Ich hätte gerne die Speisekarte.","Natürlich! Und zu trinken?","Ein Wasser, bitte.","Und zum Essen?","Ich nehme das Schnitzel mit Pommes.","Sehr gerne. Das macht zusammen vierzehn Euro."] },
   { "id":"dialog_bahnhof",
-    "parts":["Guten Morgen! Eine Fahrkarte nach Muenchen, bitte.","Einfach oder hin und zurueck?","Hin und zurueck, bitte.","Wann moechten Sie fahren?","Heute um zehn Uhr.","Das macht vierzig Euro.","Danke schoen!"] },
+    "parts":["Guten Morgen! Eine Fahrkarte nach München, bitte.","Einfach oder hin und zurück?","Hin und zurück, bitte.","Wann möchten Sie fahren?","Heute um zehn Uhr.","Das macht vierzig Euro.","Danke schön!"] },
   { "id":"dialog_telefon",
-    "parts":["Hallo, hier ist Anna Mueller. Kann ich bitte mit Herrn Weber sprechen?","Tut mir leid, Herr Weber ist gerade nicht im Buero. Kann ich eine Nachricht hinterlassen?","Ja, bitte. Sagen Sie ihm, dass ich morgen um neun Uhr anrufe."] },
+    "parts":["Hallo, hier ist Anna Müller. Kann ich bitte mit Herrn Weber sprechen?","Tut mir leid, Herr Weber ist gerade nicht im Büro. Kann ich eine Nachricht hinterlassen?","Ja, bitte. Sagen Sie ihm, dass ich morgen um neun Uhr anrufe."] },
   { "id":"dialog_arzt",
-    "parts":["Guten Morgen. Was kann ich fuer Sie tun?","Ich fuehle mich nicht gut. Ich habe seit gestern Kopfschmerzen und Fieber.","Seit wann haben Sie das Fieber?","Seit heute Morgen.","Ich schreibe Ihnen ein Rezept. Sie sollten viel trinken und sich ausruhen."] },
+    "parts":["Guten Morgen. Was kann ich für Sie tun?","Ich fühle mich nicht gut. Ich habe seit gestern Kopfschmerzen und Fieber.","Seit wann haben Sie das Fieber?","Seit heute Morgen.","Ich schreibe Ihnen ein Rezept. Sie sollten viel trinken und sich ausruhen."] },
   { "id":"dialog_bewerbung",
-    "parts":["Guten Morgen, Frau Garcia. Erzaehlen Sie mir bitte etwas ueber sich.","Ich habe Wirtschaft studiert und fuenf Jahre in einer Marketingagentur gearbeitet. Ich suche jetzt eine neue Herausforderung.","Warum moechten Sie zu uns wechseln?","Ihr Unternehmen hat einen sehr guten Ruf, und ich glaube, dass ich meine Kenntnisse hier gut einsetzen kann."] },
+    "parts":["Guten Morgen, Frau Garcia. Erzählen Sie mir bitte etwas über sich.","Ich habe Wirtschaft studiert und fünf Jahre in einer Marketingagentur gearbeitet. Ich suche jetzt eine neue Herausforderung.","Warum möchten Sie zu uns wechseln?","Ihr Unternehmen hat einen sehr guten Ruf, und ich glaube, dass ich meine Kenntnisse hier gut einsetzen kann."] },
   { "id":"dialog_umwelt",
-    "parts":["Ich finde, wir muessen mehr fuer die Umwelt tun. Der Klimawandel ist ein ernstes Problem.","Da bin ich voellig einverstanden. Aber ich denke, dass die Regierung mehr Verantwortung uebernehmen muss.","Stimmt, aber auch jeder Einzelne kann etwas beitragen. Weniger Auto fahren zum Beispiel.","Das ist richtig. Ich fahre seit letztem Jahr Fahrrad zur Arbeit."] },
+    "parts":["Ich finde, wir müssen mehr für die Umwelt tun. Der Klimawandel ist ein ernstes Problem.","Da bin ich völlig einverstanden. Aber ich denke, dass die Regierung mehr Verantwortung übernehmen muss.","Stimmt, aber auch jeder Einzelne kann etwas beitragen. Weniger Auto fahren zum Beispiel.","Das ist richtig. Ich fahre seit letztem Jahr Fahrrad zur Arbeit."] },
   { "id":"dialog_wohnung",
-    "parts":["Ich rufe wegen der Wohnung an, die Sie inseriert haben.","Ja, die Wohnung hat drei Zimmer, eine Kueche und ein Bad. Sie ist im vierten Stock.","Wie hoch ist die Miete?","Die Kaltmiete betraegt achthundert Euro. Mit Nebenkosten sind es neunhundert.","Waere es moeglich, die Wohnung zu besichtigen?","Natuerlich. Wie waere es mit Donnerstag um achtzehn Uhr?"] },
+    "parts":["Ich rufe wegen der Wohnung an, die Sie inseriert haben.","Ja, die Wohnung hat drei Zimmer, eine Küche und ein Bad. Sie ist im vierten Stock.","Wie hoch ist die Miete?","Die Kaltmiete betraegt achthundert Euro. Mit Nebenkosten sind es neunhundert.","Wäre es möglich, die Wohnung zu besichtigen?","Natürlich. Wie wäre es mit Donnerstag um achtzehn Uhr?"] },
   { "id":"dialog_nachrichten", "single_voice":True,
-    "parts":["Guten Abend. Hier sind die Nachrichten.","Die Bundesregierung hat heute ein neues Klimaschutzpaket beschlossen.","Es sieht vor, den Anteil erneuerbarer Energien bis 2030 auf achtzig Prozent zu erhoehen.","Kritiker bemaengeln jedoch, dass die Massnahmen nicht weit genug gehen.","Ausserdem hat die Europaeische Zentralbank den Leitzins erneut angehoben."] },
+    "parts":["Guten Abend. Hier sind die Nachrichten.","Die Bundesregierung hat heute ein neues Klimaschutzpaket beschlossen.","Es sieht vor, den Anteil erneuerbarer Energien bis 2030 auf achtzig Prozent zu erhöhen.","Kritiker bemängeln jedoch, dass die Massnahmen nicht weit genug gehen.","Ausserdem hat die Europäische Zentralbank den Leitzins erneut angehoben."] },
 ]
 
 SPEAK_FILES = [
@@ -59,7 +59,7 @@ SPEAK_FILES = [
   {"id":"speak_was_machst",  "text":"Was machst du gern?"},
   {"id":"speak_komme",       "text":"Ich komme aus Spanien."},
   {"id":"speak_spreche",     "text":"Ich spreche ein bisschen Deutsch."},
-  {"id":"speak_lerne",       "text":"Ich lerne Deutsch, weil ich es sehr schoen finde."},
+  {"id":"speak_lerne",       "text":"Ich lerne Deutsch, weil ich es sehr schön finde."},
 ]
 
 def load_key():
