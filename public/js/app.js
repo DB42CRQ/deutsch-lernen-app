@@ -34,6 +34,46 @@ document.addEventListener('DOMContentLoaded', () => {
   syncTopBar();
 });
 
+// ── UPDATE / SERVICE WORKER ──────────────────────────────────
+function updateApp() {
+  // Clear all caches and reload
+  if ('caches' in window) {
+    caches.keys().then(keys => {
+      Promise.all(keys.map(k => caches.delete(k))).then(() => {
+        window.location.reload(true);
+      });
+    });
+  } else {
+    window.location.reload(true);
+  }
+}
+
+// Check if a new service worker is waiting → show update button
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('/sw.js').then(reg => {
+    // New SW waiting = update available
+    if (reg.waiting) {
+      document.getElementById('updateBtn').style.display = 'block';
+    }
+    reg.addEventListener('updatefound', () => {
+      const newWorker = reg.installing;
+      newWorker.addEventListener('statechange', () => {
+        if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+          document.getElementById('updateBtn').style.display = 'block';
+          showToast('🔄 Actualización disponible — toca 🔄');
+        }
+      });
+    });
+  }).catch(() => {});
+
+  // Check for updates every 10 minutes
+  setInterval(() => {
+    navigator.serviceWorker.getRegistration().then(reg => {
+      if (reg) reg.update();
+    });
+  }, 10 * 60 * 1000);
+}
+
 function checkDayReset() {
   const today = new Date().toDateString();
   if (S.lastDay !== today) {
