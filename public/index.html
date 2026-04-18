@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="Deutsch">
+  <meta name="theme-color" content="#FF6B35">
+  <meta name="description" content="Aprende alemán desde español — A1 hasta B2">
+  <link rel="manifest" href="/manifest.json">
+  <link rel="apple-touch-icon" href="/icons/icon-192.png">
+  <title>Deutsch Lernen 🇩🇪</title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+
+<!-- ── TOPBAR ── -->
+<header class="topbar">
+  <div class="logo">
+    <div class="logo-mark">🇩🇪</div>
+    <span class="logo-text">Deutsch</span>
+  </div>
+  <div class="top-pills">
+    <div class="pill pill-streak">🔥 <span id="tb-streak">1</span></div>
+    <div class="pill pill-xp">⭐ <span id="tb-xp">0</span></div>
+  </div>
+</header>
+
+<!-- ── CANVAS FOR CONFETTI ── -->
+<canvas id="confetti"></canvas>
+
+<!-- ── XP TOAST ── -->
+<div class="toast" id="toast">+5 XP</div>
+
+<!-- ── SCROLLABLE CONTENT ── -->
+<main class="content" id="content">
+
+  <!-- ① HOME ─────────────────────────────────────────── -->
+  <section class="panel active" id="p-home">
+    <div class="banner banner-home">
+      <div class="banner-deco" style="width:120px;height:120px;top:-30px;right:-20px;background:#fff;"></div>
+      <div class="banner-deco" style="width:70px;height:70px;bottom:20px;left:30px;background:#fff;"></div>
+      <h2>¡Aprende alemán! 🚀</h2>
+      <p>Tu camino personal de A1 hasta B2</p>
+    </div>
+
+    <!-- Level ring card -->
+    <div class="home-level-card">
+      <div class="hlc-row">
+        <div class="ring-wrap">
+          <svg width="76" height="76" viewBox="0 0 76 76">
+            <circle cx="38" cy="38" r="28" fill="none" stroke="#EEE8F0" stroke-width="7"/>
+            <circle cx="38" cy="38" r="28" fill="none" stroke="#6BCB77" stroke-width="7"
+              stroke-dasharray="176" stroke-dashoffset="176" stroke-linecap="round" id="ringCircle"/>
+          </svg>
+          <div class="ring-inner">
+            <span class="ring-label" id="ringLabel">A1</span>
+            <span class="ring-pct"   id="ringPct">0%</span>
+          </div>
+        </div>
+        <div class="hlc-text">
+          <h2 id="lcTitle">A1 — Principiante</h2>
+          <p id="lcDesc">Saludos, números y vocabulario básico.</p>
+          <div class="hlc-next" id="lcNext">🏆 Faltan 300 XP</div>
+        </div>
+      </div>
+      <div class="xp-bar-wrap">
+        <div class="xp-bar-meta">
+          <span id="xpLabel">0 XP</span>
+          <span id="xpTotal">meta: 300 XP</span>
+        </div>
+        <div class="xp-track"><div class="xp-fill" id="xpFill" style="width:0%"></div></div>
+      </div>
+    </div>
+
+    <!-- Daily goals -->
+    <div class="section">
+      <div class="section-title">📋 Objetivos de hoy</div>
+      <div class="goal-card" id="g0">
+        <div class="goal-icon" style="background:#EAF2FF;">📚</div>
+        <div class="goal-body"><h4>5 palabras correctas</h4><p>Repasa tarjetas de vocabulario</p></div>
+        <div class="goal-tick" id="gc0"></div>
+      </div>
+      <div class="goal-card" id="g1">
+        <div class="goal-icon" style="background:#F3EEFF;">✏️</div>
+        <div class="goal-body"><h4>1 ejercicio de gramática</h4><p>Responde correctamente</p></div>
+        <div class="goal-tick" id="gc1"></div>
+      </div>
+      <div class="goal-card" id="g2">
+        <div class="goal-icon" style="background:#FFF3E8;">🗣️</div>
+        <div class="goal-body"><h4>Práctica oral</h4><p>Graba y repite una frase</p></div>
+        <div class="goal-tick" id="gc2"></div>
+      </div>
+    </div>
+
+    <!-- Level path -->
+    <div class="section" style="margin-top:14px;">
+      <div class="section-title">🗺️ Hoja de ruta</div>
+      <div class="level-path" id="levelPath"></div>
+    </div>
+
+    <!-- Badges -->
+    <div class="section" style="margin-top:14px;">
+      <div class="section-title">🏅 Mis logros</div>
+    </div>
+    <div class="badges-row" id="badgesRow"></div>
+    <div style="height:20px;"></div>
+  </section>
+
+  <!-- ② VOCABULARY ────────────────────────────────────── -->
+  <section class="panel" id="p-vocab">
+    <div class="banner banner-vocab">
+      <div class="banner-deco" style="width:100px;height:100px;top:-25px;right:-10px;background:#fff;"></div>
+      <h2>📚 Vocabulario</h2>
+      <p>Toca la tarjeta para revelar la traducción</p>
+    </div>
+
+    <div class="vocab-scores">
+      <div class="vscore ok"><div class="vn" id="vs-ok">0</div><div class="vl">✓ Correcto</div></div>
+      <div class="vscore no"><div class="vn" id="vs-no">0</div><div class="vl">✗ Repasar</div></div>
+      <div class="vscore tt"><div class="vn" id="vs-tot">0</div><div class="vl">Total</div></div>
+    </div>
+
+    <div class="cat-row">
+      <div class="cat-chip active" onclick="setCat('all',this)">🌟 Todo</div>
+      <div class="cat-chip" onclick="setCat('saludos',this)">👋 Saludos</div>
+      <div class="cat-chip" onclick="setCat('numeros',this)">🔢 Números</div>
+      <div class="cat-chip" onclick="setCat('familia',this)">👨‍👩‍👧 Familia</div>
+      <div class="cat-chip" onclick="setCat('comida',this)">🍎 Comida</div>
+      <div class="cat-chip" onclick="setCat('tiempo',this)">⏰ Tiempo</div>
+      <div class="cat-chip" onclick="setCat('verbos',this)">⚡ Verbos</div>
+    </div>
+
+    <!-- 3-D Flip Card -->
+    <div class="flip-scene" onclick="flipCard()">
+      <div class="flip-card-3d" id="flipCard3d">
+        <div class="flip-face flip-front">
+          <div class="word-de" id="vDe">Guten Morgen</div>
+          <div class="tap-hint">👆 Toca para ver la traducción</div>
+        </div>
+        <div class="flip-face flip-back">
+          <div class="flip-back-label">En español:</div>
+          <div class="word-es" id="vEs">Buenos días</div>
+          <div class="flip-ex" id="vEx">„Guten Morgen! Wie geht es Ihnen?"</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card-actions" id="feedbackReveal">
+      <button class="act-btn act-reveal" onclick="flipCard()">👀 Ver traducción</button>
+    </div>
+    <div class="card-actions" id="feedbackHide" style="display:none;">
+      <button class="act-btn act-no"  onclick="markV(false)">✗ No sabía</button>
+      <button class="act-btn act-yes" onclick="markV(true)">✓ Lo sabía</button>
+    </div>
+    <div style="height:20px;"></div>
+  </section>
+
+  <!-- ③ GRAMMAR ───────────────────────────────────────── -->
+  <section class="panel" id="p-grammar">
+    <div class="banner banner-gram">
+      <div class="banner-deco" style="width:90px;height:90px;top:-20px;right:-10px;background:#fff;"></div>
+      <h2>✏️ Gramática</h2>
+      <p>Elige un tema y practica</p>
+    </div>
+
+    <div id="gramTopicsWrap">
+      <div class="topic-grid" id="topicGrid"></div>
+    </div>
+
+    <div id="gramExWrap" style="display:none;">
+      <div class="gram-ex-area">
+        <div class="gram-card">
+          <h3 id="gTitle">Artículos 🔤</h3>
+          <div class="gs" id="gSub">der / die / das</div>
+          <div class="gram-q" id="gQ"></div>
+          <div class="opts-grid" id="gOpts"></div>
+          <div class="gram-expl" id="gExpl"></div>
+          <button class="gram-next-btn" id="gNext" onclick="nextGramEx()">Siguiente →</button>
+        </div>
+        <button class="back-link" onclick="backTopics()">← Volver a temas</button>
+      </div>
+    </div>
+    <div style="height:20px;"></div>
+  </section>
+
+  <!-- ④ LISTENING ─────────────────────────────────────── -->
+  <section class="panel" id="p-listen">
+    <div class="banner banner-listen">
+      <div class="banner-deco" style="width:110px;height:110px;top:-25px;right:-15px;background:#fff;"></div>
+      <h2>🎧 Comprensión</h2>
+      <p>Escucha primero, luego responde</p>
+    </div>
+    <div class="listen-cards" id="listenCards"></div>
+  </section>
+
+  <!-- ⑤ SPEAKING ──────────────────────────────────────── -->
+  <section class="panel" id="p-speak">
+    <div class="banner banner-speak">
+      <div class="banner-deco" style="width:100px;height:100px;top:-20px;right:-15px;background:#fff;"></div>
+      <h2>🗣️ Pronunciación</h2>
+      <p>Habla en voz alta y practica</p>
+    </div>
+
+    <div class="tip-banner">
+      <p>💡 <strong>Tu ventaja española:</strong> La <strong>W</strong> alemana suena como nuestra <strong>V</strong>. Las vocales a/e/i/o/u son iguales. ¡Tienes una base excelente!</p>
+    </div>
+
+    <div class="speak-cards" id="speakCards"></div>
+
+    <div class="phon-section">
+      <div class="phon-card">
+        <div class="phon-title">🎵 Sonidos especiales del alemán</div>
+        <div id="phonList"></div>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<!-- ── BOTTOM NAV ── -->
+<nav class="bottomnav">
+  <button class="nav-btn active" onclick="nav('home',this)">
+    <span class="ni">🏠</span><span>Inicio</span><span class="nd"></span>
+  </button>
+  <button class="nav-btn" onclick="nav('vocab',this)">
+    <span class="ni">📚</span><span>Palabras</span><span class="nd"></span>
+  </button>
+  <button class="nav-btn" onclick="nav('grammar',this)">
+    <span class="ni">✏️</span><span>Gramática</span><span class="nd"></span>
+  </button>
+  <button class="nav-btn" onclick="nav('listen',this)">
+    <span class="ni">🎧</span><span>Escucha</span><span class="nd"></span>
+  </button>
+  <button class="nav-btn" onclick="nav('speak',this)">
+    <span class="ni">🗣️</span><span>Habla</span><span class="nd"></span>
+  </button>
+</nav>
+
+<!-- ── BOTTOM SHEET MODAL ── -->
+<div class="modal-overlay" id="modal" onclick="if(event.target===this)closeModal()">
+  <div class="modal-sheet">
+    <div class="modal-pill"></div>
+    <span class="modal-emoji" id="mEmoji">🎉</span>
+    <div class="modal-title" id="mTitle">¡Felicidades!</div>
+    <div class="modal-text"  id="mText">Descripción aquí.</div>
+    <button class="modal-cta" onclick="closeModal()">¡Genial! 🎊</button>
+  </div>
+</div>
+
+<script src="/js/data.js"></script>
+<script src="/js/app.js"></script>
+</body>
+</html>
