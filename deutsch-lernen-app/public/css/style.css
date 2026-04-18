@@ -472,3 +472,17 @@ button { font-family: 'Nunito', sans-serif; cursor: pointer; }
 }
 .speed-btn:hover  { border-color: var(--mint); color: var(--mint-d); }
 .speed-btn.active { background: var(--mint); border-color: var(--mint); color: white; }
+
+/* ── BANNER PHOTO ── */
+.banner-photo {
+  position: absolute;
+  top: 12px;
+  right: 14px;
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 3px solid rgba(255,255,255,0.7);
+  box-shadow: 0 3px 12px rgba(0,0,0,0.2);
+  z-index: 2;
+}
