@@ -428,3 +428,19 @@ button { font-family: 'Nunito', sans-serif; cursor: pointer; }
 
 /* ── CONFETTI CANVAS ── */
 #confetti { position: fixed; inset: 0; pointer-events: none; z-index: 400; }
+
+/* ── UPDATE BUTTON ── */
+.update-btn {
+  background: var(--mint);
+  border: none;
+  border-radius: 20px;
+  padding: 5px 10px;
+  font-size: 0.85rem;
+  cursor: pointer;
+  animation: spin-slow 2s linear infinite;
+  box-shadow: 0 2px 8px rgba(107,203,119,0.4);
+}
+@keyframes spin-slow {
+  0%   { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}

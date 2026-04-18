@@ -5,13 +5,13 @@ function loadState() {
     if (s) return JSON.parse(s);
   } catch (e) {}
   return {
-    xp: 45, streak: 1,
+    xp: 0, streak: 1,
     vOk: 0, vNo: 0, vTot: 0,
     gCorr: 0, gStreak: 0,
     goals: [false, false, false],
     badges: ['first'],
     lvl: 'a1',
-    pct: { a1: 15, a2: 0, b1: 0, b2: 0 },
+    pct: { a1: 0, a2: 0, b1: 0, b2: 0 },
     lastDay: new Date().toDateString(),
   };
 }
@@ -33,6 +33,46 @@ document.addEventListener('DOMContentLoaded', () => {
   loadVocab();
   syncTopBar();
 });
+
+// ── UPDATE / SERVICE WORKER ──────────────────────────────────
+function updateApp() {
+  // Clear all caches and reload
+  if ('caches' in window) {
+    caches.keys().then(keys => {
+      Promise.all(keys.map(k => caches.delete(k))).then(() => {
+        window.location.reload(true);
+      });
+    });
+  } else {
+    window.location.reload(true);
+  }
+}
+
+// Check if a new service worker is waiting → show update button
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('/sw.js').then(reg => {
+    // New SW waiting = update available
+    if (reg.waiting) {
+      document.getElementById('updateBtn').style.display = 'block';
+    }
+    reg.addEventListener('updatefound', () => {
+      const newWorker = reg.installing;
+      newWorker.addEventListener('statechange', () => {
+        if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+          document.getElementById('updateBtn').style.display = 'block';
+          showToast('🔄 Actualización disponible — toca 🔄');
+        }
+      });
+    });
+  }).catch(() => {});
+
+  // Check for updates every 10 minutes
+  setInterval(() => {
+    navigator.serviceWorker.getRegistration().then(reg => {
+      if (reg) reg.update();
+    });
+  }, 10 * 60 * 1000);
+}
 
 function checkDayReset() {
   const today = new Date().toDateString();
@@ -362,11 +402,18 @@ function nextGramEx() {
 }
 
 // ── LISTENING ────────────────────────────────────────────────
-const audioTimers = {};
+let currentUtterance = null;
+let currentPlayBtn = null;
 
 function buildListening() {
   const c = document.getElementById('listenCards');
   c.innerHTML = '';
+
+  if (!window.speechSynthesis) {
+    c.innerHTML = '<div style="padding:20px;color:#888;font-size:0.85rem;">⚠️ Tu navegador no soporta Text-to-Speech. Usa Chrome o Safari.</div>';
+    return;
+  }
+
   LISTENING.forEach((item, i) => {
     const qHtml = item.qs.map((q, qi) => `
       <div class="listen-q">
@@ -386,7 +433,7 @@ function buildListening() {
         <button class="play-btn" id="pb${i}" onclick="playAudio(${i})">▶</button>
         <div class="pbar-outer">
           <div class="pbar-track"><div class="pbar-fill" id="pf${i}"></div></div>
-          <div class="pbar-time" id="pt${i}">0:00</div>
+          <div class="pbar-time" id="pt${i}">Toca ▶ para escuchar</div>
         </div>
       </div>
       <button class="tr-btn" onclick="toggleTranscript(${i})">📄 Ver / ocultar transcripción</button>
@@ -397,21 +444,67 @@ function buildListening() {
 }
 
 function playAudio(i) {
-  const btn = document.getElementById('pb' + i);
-  if (audioTimers[i]) {
-    clearInterval(audioTimers[i]);
-    delete audioTimers[i];
-    btn.textContent = '▶';
-    return;
+  const btn  = document.getElementById('pb' + i);
+  const bar  = document.getElementById('pf' + i);
+  const time = document.getElementById('pt' + i);
+
+  // Stop current speech
+  if (currentUtterance) {
+    window.speechSynthesis.cancel();
+    if (currentPlayBtn) currentPlayBtn.textContent = '▶';
+    // Same button tapped again = just stop
+    if (currentPlayBtn === btn) {
+      currentUtterance = null;
+      currentPlayBtn = null;
+      bar.style.width = '0%';
+      time.textContent = 'Toca ▶ para escuchar';
+      return;
+    }
   }
-  btn.textContent = '⏸';
-  let s = 0;
-  audioTimers[i] = setInterval(() => {
-    s++;
-    document.getElementById('pf' + i).style.width = (s / 8 * 100) + '%';
-    document.getElementById('pt' + i).textContent = `0:0${s}`;
-    if (s >= 8) { clearInterval(audioTimers[i]); delete audioTimers[i]; btn.textContent = '▶'; }
-  }, 1000);
+
+  const text = LISTENING[i].text;
+  const utterance = new SpeechSynthesisUtterance(text);
+  utterance.lang  = 'de-DE';
+  utterance.rate  = 0.85;
+  utterance.pitch = 1;
+
+  // Pick a German voice if available
+  const voices  = window.speechSynthesis.getVoices();
+  const deVoice = voices.find(v => v.lang.startsWith('de'));
+  if (deVoice) utterance.voice = deVoice;
+
+  // Animate progress bar
+  const estimatedMs = text.length * 65;
+  let elapsed = 0;
+  const interval = setInterval(() => {
+    elapsed += 200;
+    bar.style.width = Math.min(98, (elapsed / estimatedMs) * 100) + '%';
+    const secs = Math.floor(elapsed / 1000);
+    time.textContent = '0:' + secs.toString().padStart(2, '0');
+  }, 200);
+
+  utterance.onend = () => {
+    clearInterval(interval);
+    bar.style.width = '100%';
+    time.textContent = '✓ Fin';
+    btn.textContent = '▶';
+    currentUtterance = null;
+    currentPlayBtn = null;
+  };
+
+  utterance.onerror = () => {
+    clearInterval(interval);
+    btn.textContent = '▶';
+    time.textContent = '⚠️ Error de audio';
+    currentUtterance = null;
+    currentPlayBtn = null;
+  };
+
+  btn.textContent  = '⏸';
+  bar.style.width  = '0%';
+  currentUtterance = utterance;
+  currentPlayBtn   = btn;
+  window.speechSynthesis.speak(utterance);
 }
 
 function toggleTranscript(i) {
