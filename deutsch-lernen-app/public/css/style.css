@@ -486,3 +486,396 @@ button { font-family: 'Nunito', sans-serif; cursor: pointer; }
   box-shadow: 0 3px 12px rgba(0,0,0,0.2);
   z-index: 2;
 }
+
+/* ── PHRASE OF THE DAY ── */
+.phrase-card {
+  margin: 12px 16px 4px;
+  background: linear-gradient(135deg, var(--sky-light), #fff);
+  border: 2px solid rgba(77,150,255,0.2);
+  border-radius: var(--r-lg);
+  padding: 12px 16px;
+}
+.phrase-label { font-size: 0.65rem; font-weight: 800; color: var(--sky-d); margin-bottom: 5px; text-transform: uppercase; letter-spacing: 0.06em; }
+.phrase-de    { font-family: 'Fredoka One', sans-serif; font-size: 1rem; color: var(--text); margin-bottom: 3px; }
+.phrase-es    { font-size: 0.75rem; color: var(--muted); font-style: italic; font-weight: 600; }
+
+/* ── COMBO ROW ── */
+.combo-row {
+  display: none;
+  align-items: center;
+  gap: 8px;
+  margin-top: 10px;
+  padding: 8px 12px;
+  background: linear-gradient(90deg, #FFF3E8, #FFFBEA);
+  border-radius: var(--r-sm);
+  border: 1px solid rgba(255,159,74,0.3);
+}
+.combo-badge { font-size: 0.82rem; font-weight: 800; color: var(--orange); }
+.combo-hint  { font-size: 0.7rem; color: var(--muted); }
+
+/* ── EXAM BUTTON ── */
+.exam-btn {
+  width: 100%;
+  margin-top: 12px;
+  padding: 13px;
+  border-radius: var(--r-md);
+  border: none;
+  background: linear-gradient(135deg, #9B72CF, #BE96FF);
+  color: white;
+  font-family: 'Nunito', sans-serif;
+  font-weight: 900;
+  font-size: 0.95rem;
+  cursor: pointer;
+  box-shadow: 0 4px 16px rgba(155,114,207,0.4);
+  animation: examPulse 2s infinite;
+  transition: transform 0.15s;
+}
+.exam-btn:active { transform: scale(0.97); }
+@keyframes examPulse {
+  0%, 100% { box-shadow: 0 4px 16px rgba(155,114,207,0.4); }
+  50%       { box-shadow: 0 4px 24px rgba(155,114,207,0.7); }
+}
+
+/* ── STATS ROW ── */
+.stats-row {
+  display: flex;
+  gap: 8px;
+  padding: 10px 16px 4px;
+}
+.stat-chip {
+  flex: 1;
+  background: var(--white);
+  border: 2px solid var(--faint);
+  border-radius: var(--r-md);
+  padding: 10px 6px;
+  text-align: center;
+  box-shadow: var(--shadow-sm);
+}
+.stat-n { font-family: 'Fredoka One', sans-serif; font-size: 1.3rem; color: var(--coral); }
+.stat-l { font-size: 0.6rem; font-weight: 800; color: var(--muted); margin-top: 1px; }
+
+/* ── WEEKLY CHART ── */
+.week-chart {
+  display: flex;
+  align-items: flex-end;
+  gap: 6px;
+  height: 72px;
+  background: var(--white);
+  border: 2px solid var(--faint);
+  border-radius: var(--r-md);
+  padding: 10px 12px 6px;
+  box-shadow: var(--shadow-sm);
+}
+.week-bar-wrap   { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px; height: 100%; justify-content: flex-end; }
+.week-bar-track  { flex: 1; width: 100%; display: flex; align-items: flex-end; }
+.week-bar-fill   { width: 100%; border-radius: 4px 4px 0 0; background: var(--faint); min-height: 4px; transition: height 0.8s ease; }
+.week-bar-fill.today { background: var(--coral); }
+.week-bar-label  { font-size: 0.6rem; font-weight: 800; color: var(--muted); }
+.week-bar-label.today { color: var(--coral); }
+
+/* ── EXAM PANEL ── */
+.exam-progress-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 4px;
+}
+.exam-q-counter   { font-size: 0.78rem; font-weight: 800; color: var(--muted); white-space: nowrap; }
+.exam-prog-track  { flex: 1; height: 7px; background: var(--faint); border-radius: 4px; overflow: hidden; }
+.exam-prog-fill   { height: 100%; background: linear-gradient(90deg, var(--purple), #BE96FF); border-radius: 4px; transition: width 0.4s ease; }
+
+/* ── BANNER GREETING ── */
+.banner-greeting  { font-size: 0.78rem; color: rgba(255,255,255,0.85); font-weight: 700; margin-bottom: 3px; }
+
+/* ── VOCAB CONTROLS ── */
+.vocab-controls { padding: 10px 16px 0; }
+
+.vocab-mode-row {
+  display: flex; gap: 6px; margin-bottom: 8px;
+}
+.mode-btn {
+  flex: 1; padding: 8px 6px; border-radius: var(--r-md); border: 2px solid var(--faint);
+  background: var(--white); color: var(--muted);
+  font-family: 'Nunito', sans-serif; font-size: 0.72rem; font-weight: 800;
+  cursor: pointer; transition: all 0.2s; text-align: center;
+}
+.mode-btn.active { background: var(--sky); border-color: var(--sky); color: white; }
+.mode-btn:active { transform: scale(0.95); }
+
+.vocab-dir-row {
+  display: flex; gap: 6px; margin-bottom: 4px;
+}
+.dir-btn {
+  flex: 1; padding: 6px; border-radius: var(--r-sm); border: 2px solid var(--faint);
+  background: var(--white); color: var(--muted);
+  font-family: 'Nunito', sans-serif; font-size: 0.75rem; font-weight: 800;
+  cursor: pointer; transition: all 0.2s;
+}
+.dir-btn.active { background: var(--mint); border-color: var(--mint); color: white; }
+
+.vocab-level-row {
+  display: flex; gap: 6px; padding: 6px 16px 0;
+}
+.lvl-btn {
+  flex: 1; padding: 6px; border-radius: var(--r-sm); border: 2px solid var(--faint);
+  background: var(--white); color: var(--muted);
+  font-family: 'Fredoka One', sans-serif; font-size: 0.85rem;
+  cursor: pointer; transition: all 0.2s;
+}
+.lvl-btn.active { background: var(--coral); border-color: var(--coral); color: white; }
+
+/* CARD NUMBER */
+.v-card-num { font-size: 0.65rem; color: var(--muted); font-weight: 800; margin-top: 8px; }
+
+/* CHOICE MODE */
+.choice-card {
+  margin: 10px 16px 0;
+  background: var(--white); border: 2px solid var(--faint);
+  border-radius: var(--r-xl); padding: 20px;
+  box-shadow: var(--shadow-md);
+}
+.choice-question {
+  font-family: 'Fredoka One', sans-serif; font-size: 1.15rem;
+  color: var(--text); margin-bottom: 16px; line-height: 1.4;
+}
+.choice-opts {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 8px;
+}
+
+/* TYPE MODE */
+.type-card {
+  margin: 10px 16px 0;
+  background: var(--white); border: 2px solid var(--faint);
+  border-radius: var(--r-xl); padding: 20px;
+  box-shadow: var(--shadow-md);
+}
+.type-question { font-size: 0.75rem; font-weight: 800; color: var(--muted); margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.06em; }
+.type-word { font-family: 'Fredoka One', sans-serif; font-size: 1.6rem; color: var(--text); margin-bottom: 16px; }
+.type-input {
+  width: 100%; padding: 12px 14px; border-radius: var(--r-md);
+  border: 2px solid var(--faint); background: var(--bg);
+  font-family: 'Nunito', sans-serif; font-size: 1rem; font-weight: 700;
+  color: var(--text); outline: none; transition: border-color 0.2s;
+}
+.type-input:focus { border-color: var(--sky); }
+
+/* ── GRAMMAR EXPLANATION CARD ── */
+.gram-explain-card {
+  background: var(--white);
+  border: 2px solid rgba(155,114,207,0.25);
+  border-radius: var(--r-xl);
+  padding: 20px;
+  box-shadow: var(--shadow-md);
+}
+.gram-explain-title {
+  font-family: 'Fredoka One', sans-serif;
+  font-size: 1.2rem;
+  color: var(--purple);
+  margin-bottom: 12px;
+}
+.gram-explain-rule {
+  font-size: 0.83rem;
+  font-weight: 700;
+  color: var(--text);
+  line-height: 1.6;
+  background: var(--purple-light);
+  border-radius: var(--r-sm);
+  padding: 10px 13px;
+  margin-bottom: 12px;
+  border-left: 4px solid var(--purple);
+}
+.gram-explain-examples {
+  margin-bottom: 10px;
+}
+.explain-ex-item {
+  font-size: 0.8rem;
+  color: var(--muted);
+  font-style: italic;
+  padding: 3px 0;
+  border-bottom: 1px solid var(--faint);
+  font-weight: 600;
+}
+.explain-ex-item:last-child { border-bottom: none; }
+.gram-explain-tip {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--sky-d);
+  background: var(--sky-light);
+  border-radius: var(--r-sm);
+  padding: 8px 12px;
+  border-left: 4px solid var(--sky);
+  margin-top: 8px;
+}
+
+/* ── GRAMMAR TOPIC PROGRESS ── */
+.tc-progress {
+  height: 4px;
+  background: var(--faint);
+  border-radius: 4px;
+  overflow: hidden;
+  margin-top: 6px;
+}
+.tc-prog-fill {
+  height: 100%;
+  background: var(--purple);
+  border-radius: 4px;
+  transition: width 0.8s ease;
+}
+.tc-pct {
+  font-size: 0.62rem;
+  font-weight: 800;
+  color: var(--purple);
+  margin-top: 2px;
+}
+.topic-card.topic-done {
+  border-color: var(--mint);
+  background: var(--mint-light);
+}
+.topic-card.topic-done .tc-prog-fill { background: var(--mint); }
+.topic-card.topic-done .tc-pct { color: var(--mint-d); }
+
+/* ── GRAMMAR SCORE BADGE ── */
+.gram-score-badge {
+  font-size: 0.72rem;
+  font-weight: 800;
+  color: var(--mint-d);
+  background: var(--mint-light);
+  border-radius: 10px;
+  padding: 2px 8px;
+  white-space: nowrap;
+}
+
+/* ── LISTENING IMPROVEMENTS ── */
+.listen-score-row {
+  display: flex; gap: 16px; padding: 6px 16px 2px;
+  font-size: 0.75rem; font-weight: 800; color: var(--muted);
+}
+.lscore span { color: var(--coral); font-size: 1rem; }
+
+.listen-card-header {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 10px;
+}
+.listen-card-header h3 { font-size: 0.9rem; font-weight: 800; }
+.listen-level-badge {
+  font-size: 0.65rem; font-weight: 800; padding: 3px 9px;
+  border-radius: 8px; flex-shrink: 0;
+}
+
+.listen-card-actions {
+  display: flex; justify-content: space-between; align-items: center;
+  margin-bottom: 8px; gap: 8px;
+}
+.listen-action-btns { display: flex; gap: 6px; }
+
+.listen-score {
+  font-size: 0.75rem; font-weight: 800;
+  margin: 6px 0 8px; min-height: 16px;
+}
+
+/* VOCAB HELP */
+.vocab-help {
+  background: var(--sky-light);
+  border: 1px solid rgba(77,150,255,0.2);
+  border-radius: var(--r-sm);
+  padding: 10px 12px;
+  margin-bottom: 8px;
+}
+.vocab-help-item {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 4px 0; border-bottom: 1px solid rgba(77,150,255,0.1);
+  font-size: 0.78rem;
+}
+.vocab-help-item:last-child { border-bottom: none; }
+.vh-de { font-weight: 800; color: var(--sky-d); }
+.vh-es { color: var(--muted); font-style: italic; }
+
+/* ── SPEAKING IMPROVEMENTS ── */
+
+/* Sentence of the day */
+.speak-daily-card {
+  margin: 10px 16px 4px;
+  background: linear-gradient(135deg, #FFF3E8, #FFFBEA);
+  border: 2px solid rgba(255,159,74,0.3);
+  border-radius: var(--r-xl);
+  padding: 16px;
+}
+.speak-daily-label { font-size: 0.65rem; font-weight: 800; color: var(--orange); margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.06em; }
+.speak-daily-de    { font-family: 'Fredoka One', sans-serif; font-size: 1.15rem; color: var(--text); margin-bottom: 4px; line-height: 1.3; }
+.speak-daily-es    { font-size: 0.78rem; color: var(--muted); font-weight: 700; margin-bottom: 12px; }
+.speak-daily-actions { display: flex; gap: 8px; margin-bottom: 8px; }
+.speak-daily-btn {
+  flex: 1; padding: 9px; border-radius: var(--r-md); border: 2px solid var(--orange);
+  background: white; color: var(--orange); font-family: 'Nunito', sans-serif;
+  font-weight: 800; font-size: 0.78rem; cursor: pointer; transition: all 0.2s;
+}
+.speak-daily-btn.active { background: var(--orange); color: white; }
+.speak-daily-btn:active  { transform: scale(0.95); }
+.speak-daily-status { font-size: 0.72rem; font-weight: 700; color: var(--muted); min-height: 16px; }
+
+/* Stats row */
+.speak-stats-row {
+  display: flex; gap: 8px; padding: 8px 16px 2px;
+}
+.speak-stat {
+  flex: 1; background: var(--white); border: 2px solid var(--faint);
+  border-radius: var(--r-md); padding: 10px; text-align: center;
+  box-shadow: var(--shadow-sm);
+}
+.speak-stat span { font-family: 'Fredoka One', sans-serif; font-size: 1.4rem; color: var(--orange); display: block; }
+.speak-stat div  { font-size: 0.62rem; font-weight: 800; color: var(--muted); margin-top: 1px; }
+
+/* Level header in speak list */
+.speak-level-header {
+  padding: 10px 16px 4px;
+}
+
+/* Speak card improvements */
+.speak-card-top {
+  display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; margin-bottom: 4px;
+}
+.speak-play-btn {
+  background: var(--orange-light); border: none; border-radius: 50%;
+  width: 34px; height: 34px; font-size: 16px; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0; transition: transform 0.15s;
+}
+.speak-play-btn:active { transform: scale(0.88); }
+
+/* Shadowing mode */
+.shadow-card { width: 100%; }
+.shadow-steps { display: flex; flex-direction: column; gap: 6px; margin: 12px 0; }
+.shadow-step {
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 12px; border-radius: var(--r-sm);
+  background: var(--faint); opacity: 0.5;
+  transition: all 0.3s;
+}
+.shadow-step.active { background: var(--orange-light); opacity: 1; border: 1px solid rgba(255,159,74,0.4); }
+.shadow-step.done   { background: var(--mint-light);   opacity: 1; border: 1px solid rgba(78,203,138,0.3); }
+.ss-num {
+  width: 22px; height: 22px; border-radius: 50%;
+  background: var(--muted); color: white;
+  font-size: 0.7rem; font-weight: 800;
+  display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+}
+.shadow-step.active .ss-num { background: var(--orange); }
+.shadow-step.done .ss-num   { background: var(--mint); }
+.shadow-step span { flex: 1; font-size: 0.8rem; font-weight: 700; color: var(--text); }
+.ss-btn {
+  background: var(--orange); border: none; border-radius: var(--r-sm);
+  color: white; font-family: 'Nunito', sans-serif; font-weight: 800;
+  font-size: 0.72rem; padding: 5px 10px; cursor: pointer; transition: all 0.2s;
+  white-space: nowrap;
+}
+.shadow-step.done .ss-btn   { background: var(--mint); }
+.ss-btn:active { transform: scale(0.93); }
+
+/* Phonetics play button */
+.ph-play {
+  background: var(--orange-light); border: none; border-radius: 50%;
+  width: 32px; height: 32px; font-size: 14px; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0; transition: transform 0.15s;
+}
+.ph-play:active { transform: scale(0.88); }
