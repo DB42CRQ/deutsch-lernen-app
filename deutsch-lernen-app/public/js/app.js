@@ -292,17 +292,21 @@ function flipCard() {
 
 function speakGerman(text) {
   if (!window.speechSynthesis) return;
-  window.speechSynthesis.cancel();
+  stopTTS();
   const u = new SpeechSynthesisUtterance(text);
   u.lang  = 'de-DE';
   u.rate  = 0.82;
   u.pitch = 1.0;
-  const voices = window.speechSynthesis.getVoices();
-  const v = voices.find(v => v.lang === 'de-DE' && v.name.includes('Google'))
-    || voices.find(v => v.lang === 'de-DE')
-    || voices.find(v => v.lang.startsWith('de'));
-  if (v) u.voice = v;
-  window.speechSynthesis.speak(u);
+  function go() {
+    const voices = window.speechSynthesis.getVoices();
+    const v = voices.find(v => v.lang === 'de-DE' && v.name.toLowerCase().includes('google'))
+           || voices.find(v => v.lang === 'de-DE')
+           || voices.find(v => v.lang.startsWith('de'));
+    if (v) u.voice = v;
+    window.speechSynthesis.speak(u);
+  }
+  if (window.speechSynthesis.getVoices().length > 0) go();
+  else window.speechSynthesis.onvoiceschanged = go;
 }
 
 function markV(ok) {
@@ -419,15 +423,23 @@ function nextGramEx() {
 }
 
 // ── LISTENING ────────────────────────────────────────────────
-let currentUtterance = null;
-let currentPlayBtn = null;
+let ttsPlaying = false;
+let ttsBtn = null;
+let ttsInterval = null;
+
+function stopTTS() {
+  window.speechSynthesis.cancel();
+  ttsPlaying = false;
+  if (ttsBtn) { ttsBtn.textContent = '▶'; ttsBtn = null; }
+  if (ttsInterval) { clearInterval(ttsInterval); ttsInterval = null; }
+}
 
 function buildListening() {
   const c = document.getElementById('listenCards');
   c.innerHTML = '';
 
   if (!window.speechSynthesis) {
-    c.innerHTML = '<div style="padding:20px;color:#888;font-size:0.85rem;">⚠️ Tu navegador no soporta Text-to-Speech. Usa Chrome o Safari.</div>';
+    c.innerHTML = '<div style="padding:20px;color:#888;font-size:0.85rem;">⚠️ Tu navegador no soporta audio. Usa Chrome.</div>';
     return;
   }
 
@@ -465,77 +477,82 @@ function playAudio(i) {
   const bar  = document.getElementById('pf' + i);
   const time = document.getElementById('pt' + i);
 
-  // Stop current audio
-  if (currentUtterance) {
-    currentUtterance.pause();
-    currentUtterance = null;
-    if (currentPlayBtn) currentPlayBtn.textContent = '▶';
-    if (currentPlayBtn === btn) {
-      currentPlayBtn = null;
-      bar.style.width = '0%';
-      time.textContent = 'Toca ▶ para escuchar';
-      return;
-    }
+  // If already playing this one — stop
+  if (ttsPlaying && ttsBtn === btn) {
+    stopTTS();
+    bar.style.width = '0%';
+    time.textContent = 'Toca ▶ para escuchar';
+    return;
   }
 
-  const text = LISTENING[i].text;
+  // Stop anything else playing
+  stopTTS();
 
-  // Split dialogue into individual sentences (split on — )
-  const sentences = text.split('—').map(s => s.trim()).filter(s => s.length > 0);
+  const text = LISTENING[i].text;
+  const estimatedMs = text.length * 80;
 
   btn.textContent = '⏸';
   bar.style.width = '0%';
   time.textContent = '0:00';
+  ttsPlaying = true;
+  ttsBtn = btn;
 
-  let sentenceIdx = 0;
+  // Progress bar animation
   let elapsed = 0;
-  const estimatedMs = text.length * 72;
+  ttsInterval = setInterval(() => {
+    elapsed += 300;
+    bar.style.width = Math.min(95, (elapsed / estimatedMs) * 100) + '%';
+    const s = Math.floor(elapsed / 1000);
+    time.textContent = '0:' + s.toString().padStart(2, '0');
+  }, 300);
 
-  // Animate progress bar independently
-  const interval = setInterval(() => {
-    elapsed += 200;
-    bar.style.width = Math.min(98, (elapsed / estimatedMs) * 100) + '%';
-    const secs = Math.floor(elapsed / 1000);
-    time.textContent = '0:' + secs.toString().padStart(2, '0');
-  }, 200);
+  // Build utterance
+  const u = new SpeechSynthesisUtterance(text);
+  u.lang  = 'de-DE';
+  u.rate  = 0.8;
+  u.pitch = 1;
 
-  function speakNext() {
-    if (sentenceIdx >= sentences.length) {
-      // All done
-      clearInterval(interval);
-      bar.style.width = '100%';
-      time.textContent = '✓ Fin';
-      btn.textContent = '▶';
-      currentUtterance = null;
-      currentPlayBtn = null;
-      return;
-    }
-
-    const sentence = sentences[sentenceIdx];
-    sentenceIdx++;
-
-    const utterance = new SpeechSynthesisUtterance(sentence);
-    utterance.lang  = 'de-DE';
-    utterance.rate  = 0.78;   // slower = clearer
-    utterance.pitch = 1.0;
-
-    // Prefer Google's German voice if available (Chrome Android)
+  // Wait for voices then pick best German one
+  function speak() {
     const voices = window.speechSynthesis.getVoices();
-    const preferred = voices.find(v => v.lang === 'de-DE' && v.name.includes('Google'))
-      || voices.find(v => v.lang === 'de-DE')
-      || voices.find(v => v.lang.startsWith('de'));
-    if (preferred) utterance.voice = preferred;
-
-    utterance.onend   = () => speakNext();
-    utterance.onerror = () => speakNext(); // skip broken sentence
-
-    currentUtterance = utterance;
-    window.speechSynthesis.speak(utterance);
+    const best = voices.find(v => v.lang === 'de-DE' && v.name.toLowerCase().includes('google'))
+              || voices.find(v => v.lang === 'de-DE' && !v.localService)
+              || voices.find(v => v.lang === 'de-DE')
+              || voices.find(v => v.lang.startsWith('de'));
+    if (best) {
+      u.voice = best;
+      console.log('Using voice:', best.name);
+    }
+    window.speechSynthesis.speak(u);
   }
 
-  currentPlayBtn = btn;
-  // Small delay so voices are loaded
-  setTimeout(speakNext, 100);
+  u.onend = () => {
+    clearInterval(ttsInterval);
+    ttsInterval = null;
+    bar.style.width = '100%';
+    time.textContent = '✓ Fin';
+    btn.textContent = '▶';
+    ttsPlaying = false;
+    ttsBtn = null;
+  };
+
+  u.onerror = (e) => {
+    clearInterval(ttsInterval);
+    ttsInterval = null;
+    btn.textContent = '▶';
+    time.textContent = '⚠️ Sin audio';
+    ttsPlaying = false;
+    ttsBtn = null;
+    console.error('TTS error:', e);
+  };
+
+  // Voices may not be loaded yet on first call
+  const voices = window.speechSynthesis.getVoices();
+  if (voices.length > 0) {
+    speak();
+  } else {
+    window.speechSynthesis.onvoiceschanged = () => { speak(); };
+  }
 }
 
 function toggleTranscript(i) {
