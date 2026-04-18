@@ -134,6 +134,7 @@ const GRAMMAR = {
 const LISTENING = [
   {
     title: '🛒 En la tienda',
+    audioId: 'dialog_tienda',
     text: 'Guten Tag! Was darf es sein? — Ich hätte gerne ein Brot und zwei Brötchen, bitte. — Das macht zwei Euro fünfzig. — Bitte schön. Auf Wiedersehen!',
     qs: [
       { q: '¿Cuánto cuesta todo?',    opts: ['€1.50','€2.50','€3.00','€2.00'],              ans: 1 },
@@ -142,6 +143,7 @@ const LISTENING = [
   },
   {
     title: '🙋 Presentación personal',
+    audioId: 'dialog_presentacion',
     text: 'Hallo! Ich heiße Sarah. Ich komme aus Spanien und wohne jetzt in Berlin. Ich lerne seit drei Monaten Deutsch. Es macht mir sehr viel Spaß!',
     qs: [
       { q: '¿De dónde es Sarah?',          opts: ['Alemania','Austria','España','Suiza'],        ans: 2 },
@@ -150,6 +152,7 @@ const LISTENING = [
   },
   {
     title: '🍽️ En el restaurante',
+    audioId: 'dialog_restaurante',
     text: 'Guten Abend! Ich hätte gerne die Speisekarte. — Natürlich! Und zu trinken? — Ein Wasser, bitte. — Und zum Essen? — Ich nehme das Schnitzel mit Pommes.',
     qs: [
       { q: '¿Qué pide para beber?', opts: ['Cerveza','Vino','Agua','Café'],                    ans: 2 },
@@ -158,6 +161,7 @@ const LISTENING = [
   },
   {
     title: '🚂 En la estación de tren',
+    audioId: 'dialog_bahnhof',
     text: 'Guten Morgen! Eine Fahrkarte nach München, bitte. — Einfach oder hin und zurück? — Hin und zurück, bitte. — Das macht vierzig Euro. — Danke schön!',
     qs: [
       { q: '¿A dónde viaja?',         opts: ['Berlín','Hamburgo','München','Frankfurt'],        ans: 2 },
@@ -168,12 +172,12 @@ const LISTENING = [
 
 // ── SPEAKING ─────────────────────────────────────────────────
 const SPEAKING = [
-  { de: 'Wie heißt du?',              es: '¿Cómo te llamas?',         tip: 'Responde: „Ich heiße [tu nombre]." La EI suena como en "veinte".' },
-  { de: 'Wo wohnst du?',              es: '¿Dónde vives?',            tip: 'Responde: „Ich wohne in [ciudad]." La W alemana suena como nuestra V.' },
-  { de: 'Was machst du gern?',        es: '¿Qué te gusta hacer?',     tip: 'Responde: „Ich lerne gern Deutsch!" La CH en „ich" es suave, como susurrar.' },
-  { de: 'Ich komme aus Spanien.',     es: 'Vengo de España.',         tip: 'La IE en Spanien suena como la nuestra. ¡Muy natural!' },
-  { de: 'Ich spreche ein bisschen Deutsch.', es: 'Hablo un poco de alemán.', tip: 'Bisschen = un poquito. La SCH suena como nuestra CH.' },
-  { de: 'Ich lerne Deutsch, weil...',  es: 'Aprendo alemán porque...', tip: 'Frase abierta. ¡Complétala con tu razón personal!' },
+  { de: 'Wie heißt du?', audioId: 'speak_wie_heisst',              es: '¿Cómo te llamas?',         tip: 'Responde: „Ich heiße [tu nombre]." La EI suena como en "veinte".' },
+  { de: 'Wo wohnst du?', audioId: 'speak_wo_wohnst',              es: '¿Dónde vives?',            tip: 'Responde: „Ich wohne in [ciudad]." La W alemana suena como nuestra V.' },
+  { de: 'Was machst du gern?', audioId: 'speak_was_machst',        es: '¿Qué te gusta hacer?',     tip: 'Responde: „Ich lerne gern Deutsch!" La CH en „ich" es suave, como susurrar.' },
+  { de: 'Ich komme aus Spanien.', audioId: 'speak_komme',     es: 'Vengo de España.',         tip: 'La IE en Spanien suena como la nuestra. ¡Muy natural!' },
+  { de: 'Ich spreche ein bisschen Deutsch.', audioId: 'speak_spreche', es: 'Hablo un poco de alemán.', tip: 'Bisschen = un poquito. La SCH suena como nuestra CH.' },
+  { de: 'Ich lerne Deutsch, weil...', audioId: 'speak_lerne',  es: 'Aprendo alemán porque...', tip: 'Frase abierta. ¡Complétala con tu razón personal!' },
 ];
 
 // ── PHONETICS ────────────────────────────────────────────────
