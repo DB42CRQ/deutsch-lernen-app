@@ -286,6 +286,23 @@ function flipCard() {
   document.getElementById('flipCard3d').classList.add('flipped');
   document.getElementById('feedbackReveal').style.display = 'none';
   document.getElementById('feedbackHide').style.display = 'flex';
+  // Speak the German word
+  speakGerman(document.getElementById('vDe').textContent);
+}
+
+function speakGerman(text) {
+  if (!window.speechSynthesis) return;
+  window.speechSynthesis.cancel();
+  const u = new SpeechSynthesisUtterance(text);
+  u.lang  = 'de-DE';
+  u.rate  = 0.82;
+  u.pitch = 1.0;
+  const voices = window.speechSynthesis.getVoices();
+  const v = voices.find(v => v.lang === 'de-DE' && v.name.includes('Google'))
+    || voices.find(v => v.lang === 'de-DE')
+    || voices.find(v => v.lang.startsWith('de'));
+  if (v) u.voice = v;
+  window.speechSynthesis.speak(u);
 }
 
 function markV(ok) {
@@ -448,13 +465,12 @@ function playAudio(i) {
   const bar  = document.getElementById('pf' + i);
   const time = document.getElementById('pt' + i);
 
-  // Stop current speech
+  // Stop current audio
   if (currentUtterance) {
-    window.speechSynthesis.cancel();
+    currentUtterance.pause();
+    currentUtterance = null;
     if (currentPlayBtn) currentPlayBtn.textContent = '▶';
-    // Same button tapped again = just stop
     if (currentPlayBtn === btn) {
-      currentUtterance = null;
       currentPlayBtn = null;
       bar.style.width = '0%';
       time.textContent = 'Toca ▶ para escuchar';
@@ -463,19 +479,19 @@ function playAudio(i) {
   }
 
   const text = LISTENING[i].text;
-  const utterance = new SpeechSynthesisUtterance(text);
-  utterance.lang  = 'de-DE';
-  utterance.rate  = 0.85;
-  utterance.pitch = 1;
 
-  // Pick a German voice if available
-  const voices  = window.speechSynthesis.getVoices();
-  const deVoice = voices.find(v => v.lang.startsWith('de'));
-  if (deVoice) utterance.voice = deVoice;
+  // Split dialogue into individual sentences (split on — )
+  const sentences = text.split('—').map(s => s.trim()).filter(s => s.length > 0);
 
-  // Animate progress bar
-  const estimatedMs = text.length * 65;
+  btn.textContent = '⏸';
+  bar.style.width = '0%';
+  time.textContent = '0:00';
+
+  let sentenceIdx = 0;
   let elapsed = 0;
+  const estimatedMs = text.length * 72;
+
+  // Animate progress bar independently
   const interval = setInterval(() => {
     elapsed += 200;
     bar.style.width = Math.min(98, (elapsed / estimatedMs) * 100) + '%';
@@ -483,28 +499,43 @@ function playAudio(i) {
     time.textContent = '0:' + secs.toString().padStart(2, '0');
   }, 200);
 
-  utterance.onend = () => {
-    clearInterval(interval);
-    bar.style.width = '100%';
-    time.textContent = '✓ Fin';
-    btn.textContent = '▶';
-    currentUtterance = null;
-    currentPlayBtn = null;
-  };
+  function speakNext() {
+    if (sentenceIdx >= sentences.length) {
+      // All done
+      clearInterval(interval);
+      bar.style.width = '100%';
+      time.textContent = '✓ Fin';
+      btn.textContent = '▶';
+      currentUtterance = null;
+      currentPlayBtn = null;
+      return;
+    }
 
-  utterance.onerror = () => {
-    clearInterval(interval);
-    btn.textContent = '▶';
-    time.textContent = '⚠️ Error de audio';
-    currentUtterance = null;
-    currentPlayBtn = null;
-  };
+    const sentence = sentences[sentenceIdx];
+    sentenceIdx++;
 
-  btn.textContent  = '⏸';
-  bar.style.width  = '0%';
-  currentUtterance = utterance;
-  currentPlayBtn   = btn;
-  window.speechSynthesis.speak(utterance);
+    const utterance = new SpeechSynthesisUtterance(sentence);
+    utterance.lang  = 'de-DE';
+    utterance.rate  = 0.78;   // slower = clearer
+    utterance.pitch = 1.0;
+
+    // Prefer Google's German voice if available (Chrome Android)
+    const voices = window.speechSynthesis.getVoices();
+    const preferred = voices.find(v => v.lang === 'de-DE' && v.name.includes('Google'))
+      || voices.find(v => v.lang === 'de-DE')
+      || voices.find(v => v.lang.startsWith('de'));
+    if (preferred) utterance.voice = preferred;
+
+    utterance.onend   = () => speakNext();
+    utterance.onerror = () => speakNext(); // skip broken sentence
+
+    currentUtterance = utterance;
+    window.speechSynthesis.speak(utterance);
+  }
+
+  currentPlayBtn = btn;
+  // Small delay so voices are loaded
+  setTimeout(speakNext, 100);
 }
 
 function toggleTranscript(i) {
