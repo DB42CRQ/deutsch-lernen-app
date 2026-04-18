@@ -466,6 +466,13 @@ function buildListening() {
           <div class="pbar-time" id="pt${i}">Toca ▶ para escuchar</div>
         </div>
       </div>
+      <div class="speed-row">
+        <span class="speed-label">🐢 Velocidad:</span>
+        <button class="speed-btn active" onclick="setSpeed(${i}, 0.6, this)">0.6×</button>
+        <button class="speed-btn"        onclick="setSpeed(${i}, 0.8, this)">0.8×</button>
+        <button class="speed-btn"        onclick="setSpeed(${i}, 1.0, this)">1.0×</button>
+        <button class="speed-btn"        onclick="setSpeed(${i}, 1.25, this)">1.25×</button>
+      </div>
       <button class="tr-btn" onclick="toggleTranscript(${i})">📄 Ver / ocultar transcripción</button>
       <div class="tr-text" id="tr${i}">${item.text}</div>
       ${qHtml}`;
@@ -525,10 +532,30 @@ function playAudio(i) {
     currentAudioBtn = null;
   });
 
+  audio.playbackRate = getSpeed(i);
   audio.play().catch(() => {
     btn.textContent = '▶';
     time.textContent = '⚠️ No se pudo reproducir';
   });
+}
+
+// Speed buttons per card — store selected speed
+const cardSpeeds = {};
+
+function setSpeed(i, speed, btn) {
+  cardSpeeds[i] = speed;
+  // Update active button highlight
+  const row = btn.closest('.speed-row');
+  row.querySelectorAll('.speed-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  // Apply immediately if this card is playing
+  if (currentAudio && currentAudioBtn === document.getElementById('pb' + i)) {
+    currentAudio.playbackRate = speed;
+  }
+}
+
+function getSpeed(i) {
+  return cardSpeeds[i] || 0.6; // default 0.6x — easier for learners
 }
 
 function toggleTranscript(i) {

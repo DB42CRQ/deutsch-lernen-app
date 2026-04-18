@@ -444,3 +444,31 @@ button { font-family: 'Nunito', sans-serif; cursor: pointer; }
   0%   { transform: rotate(0deg); }
   100% { transform: rotate(360deg); }
 }
+
+/* ── SPEED CONTROL ── */
+.speed-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 10px;
+  flex-wrap: wrap;
+}
+.speed-label {
+  font-size: 0.72rem;
+  font-weight: 800;
+  color: var(--muted);
+  margin-right: 2px;
+}
+.speed-btn {
+  padding: 4px 11px;
+  border-radius: 20px;
+  border: 2px solid var(--faint);
+  background: var(--white);
+  color: var(--muted);
+  font-size: 0.72rem;
+  font-weight: 800;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.speed-btn:hover  { border-color: var(--mint); color: var(--mint-d); }
+.speed-btn.active { background: var(--mint); border-color: var(--mint); color: white; }
