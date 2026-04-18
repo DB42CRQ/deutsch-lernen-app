@@ -313,9 +313,9 @@ function setVocabLevel(level,btn){
   vLevel=level; vCat='all';
   document.querySelectorAll('.lvl-btn').forEach(b=>b.classList.remove('active')); btn.classList.add('active');
   const catLabels={
-    a1:{all:'🌟 Todo',saludos:'👋 Saludos',numeros:'🔢 Números',familia:'👨‍👩‍👧 Familia',comida:'🍎 Comida',tiempo:'⏰ Tiempo',verbos:'⚡ Verbos'},
-    a2:{all:'🌟 Todo',ciudad:'🏙️ Ciudad',reisen:'✈️ Viajes',einkaufen:'🛍️ Compras',cuerpo:'🫀 Cuerpo',pasado:'⏳ Pasado'},
-    b1:{all:'🌟 Todo',trabajo:'💼 Trabajo',opiniones:'💬 Opiniones',medios:'📺 Medios'},
+    a1:{all:'🌟 Todo',saludos:'👋 Saludos',numeros:'🔢 Números',familia:'👪 Familia',comida:'🍎 Comida',tiempo:'⏰ Tiempo',verbos:'⚡ Verbos',adjektivos:'🎨 Adjetivos',colores:'🌈 Colores',casa:'🏠 Casa',kleidung:'👗 Ropa',schule:'🏫 Escuela',tiere:'🐾 Animales',natur:'🌿 Naturaleza'},
+    a2:{all:'🌟 Todo',ciudad:'🏙️ Ciudad',reisen:'✈️ Viajes',einkaufen:'🛍️ Compras',cuerpo:'🫀 Cuerpo',pasado:'⏳ Pasado',salud:'🏥 Salud',wetter:'🌤️ Tiempo',freizeit:'🎯 Ocio',wohnen:'🏠 Vivienda',kommunikation:'💬 Comunicación'},
+    b1:{all:'🌟 Todo',trabajo:'💼 Trabajo',opiniones:'💬 Opiniones',medios:'📺 Medios',gesellschaft:'🌍 Sociedad',kultur:'🎭 Cultura',bildung:'📚 Educación',wissenschaft:'🔬 Ciencia',wirtschaft:'📈 Economía',gesundheit:'💊 Salud'},
   };
   const labels=catLabels[level]||catLabels.a1;
   document.getElementById('catRow').innerHTML=Object.entries(labels).map(([k,l])=>
