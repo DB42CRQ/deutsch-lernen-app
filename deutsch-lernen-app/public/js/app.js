@@ -750,6 +750,7 @@ function updateListenScoreRow(){
 //  SPEAKING — Practicar con reconocimiento de voz
 // ══════════════════════════════════════════════════════════════
 const micTimers={};
+const shadowData={}; // stores {text,audioId} per phrase index
 let speakMode='normal', speakLevelFilter='all';
 let spPracticedToday=0, spTotalSession=0;
 let shadowStep={};
@@ -1032,37 +1033,47 @@ function updateSpeakStats(){
 // ── SHADOW MODE ───────────────────────────────────────────────
 function buildShadowCard(p,i){
   const step=shadowStep[i]||'ready';
-  const audioId=p.audioId||'';
-  const de_escaped=p.de.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
+  // Store in lookup — avoids all quote-escaping issues in onclick
+  shadowData[i]={text:p.de, audioId:p.audioId||null};
   return '<div class="shadow-card">'+
     '<div class="speak-de">'+p.de+'</div>'+
     '<div class="speak-es">'+p.es+'</div>'+
     '<div class="shadow-steps">'+
-      '<div class="shadow-step'+(step==='ready'||step==='listen'?' active':step==='speak'||step==='done'?' done':'')+'\" id="ss1_'+i+'">'+
+      '<div class="shadow-step'+(step==='ready'||step==='listen'?' active':step==='speak'||step==='done'?' done':'')+'" id="ss1_'+i+'">'+
         '<span class="ss-num">1</span><span>Escuchar</span>'+
-        '<button class="ss-btn" onclick="shadowListen('+i+',\''+de_escaped+'\',\''+audioId+'\')">▶ Oír</button>'+
+        '<button class="ss-btn" onclick="shadowListen('+i+')">▶ Oír</button>'+
       '</div>'+
-      '<div class="shadow-step'+(step==='speak'?' active':step==='done'?' done':'')+'\" id="ss2_'+i+'">'+
+      '<div class="shadow-step'+(step==='speak'?' active':step==='done'?' done':'')+'" id="ss2_'+i+'">'+
         '<span class="ss-num">2</span><span>Repetir</span>'+
-        '<button class="ss-btn" id="ssmicbtn'+i+'" onclick="shadowSpeak('+i+',\''+de_escaped+'\')">🎤 Hablar</button>'+
+        '<button class="ss-btn" id="ssmicbtn'+i+'" onclick="shadowSpeak('+i+')">🎤 Hablar</button>'+
       '</div>'+
-      '<div class="shadow-step'+(step==='done'?' active':'')+'\" id="ss3_'+i+'">'+
+      '<div class="shadow-step'+(step==='done'?' active':'')+'" id="ss3_'+i+'">'+
         '<span class="ss-num">3</span><span>Comparar</span>'+
-        '<button class="ss-btn" onclick="shadowCompare('+i+',\''+de_escaped+'\',\''+audioId+'\')">▶ Original</button>'+
+        '<button class="ss-btn" onclick="shadowCompare('+i+')">▶ Original</button>'+
       '</div>'+
     '</div>'+
     '<div class="pron-status" id="shadowst'+i+'">Empieza escuchando el audio</div>'+
     '</div>';
 }
 
-function shadowListen(i,text,audioId){
-  shadowStep[i]='listen'; speakGerman(text,audioId||null);
+function shadowListen(i){
+  const d=shadowData[i]||{}; 
+  shadowStep[i]='listen'; 
+  speakGerman(d.text||'', d.audioId||null);
   const st=document.getElementById('shadowst'+i);
-  if(st) st.textContent='Escuchando… luego haz clic en Hablar';
-  setTimeout(()=>{ shadowStep[i]='speak'; const s2=document.getElementById('ss2_'+i); if(s2) s2.classList.add('active'); if(st) st.textContent='✓ Oído. Ahora repítelo tú.'; },2000);
+  if(st) st.textContent='Escuchando… luego haz clic en 🎤 Hablar';
+  // Estimate duration: ~600ms per word + 1s buffer
+  const words=(d.text||'').split(' ').length;
+  const delay=Math.max(2500, words*600+1000);
+  setTimeout(()=>{
+    shadowStep[i]='speak';
+    const s2=document.getElementById('ss2_'+i); if(s2) s2.classList.add('active');
+    if(st) st.textContent='✓ Oído. Ahora repítelo tú en voz alta.';
+  }, delay);
 }
 
-function shadowSpeak(i, targetText){
+function shadowSpeak(i){
+  const d=shadowData[i]||{};
   const btn=document.getElementById('ssmicbtn'+i);
   const st=document.getElementById('shadowst'+i);
   if(!btn) return;
@@ -1070,8 +1081,8 @@ function shadowSpeak(i, targetText){
     clearTimeout(btn._timer); btn._recording=false;
     if(activeRecognition){ try{ activeRecognition.stop(); }catch(e){} }
   } else {
-    if(srSupported && targetText){
-      startRecognition(targetText, null, btn, st, ()=>{
+    if(srSupported && d.text){
+      startRecognition(d.text, null, btn, st, ()=>{
         shadowStep[i]='done';
         const s3=document.getElementById('ss3_'+i); if(s3) s3.classList.add('active');
         addXP(8,'shadowing'); completeGoal(2);
@@ -1092,24 +1103,46 @@ function shadowSpeak(i, targetText){
   }
 }
 
-function shadowCompare(i,text,audioId){
-  speakGerman(text,audioId||null);
+function shadowCompare(i){
+  const d=shadowData[i]||{};
+  speakGerman(d.text||'', d.audioId||null);
   const st=document.getElementById('shadowst'+i);
-  if(st) st.textContent='🔊 Comparando con el original…';
+  if(st) st.textContent='🔊 Escucha y compara tu pronunciación…';
 }
 
 // ── PHONETICS ────────────────────────────────────────────────
 function buildPhonetics(){
   const ph=document.getElementById('phonList'); if(!ph) return; ph.innerHTML='';
-  PHONETICS.forEach(p=>{
+  // Store phonetics data globally to avoid inline onclick escaping issues
+  PHONETICS.forEach((p,pi)=>{
+    phonData[pi]=p;
     const el=document.createElement('div'); el.className='ph-row';
-    const tts_escaped=p.tts.replace(/'/g,"\\'");
     el.innerHTML=
       '<div class="ph-badge">'+p.s+'</div>'+
       '<div style="flex:1"><div class="ph-ex">'+p.ex+'</div><div class="ph-tip">'+p.tip+'</div></div>'+
-      '<button class="ph-play" onclick="speakGerman(\''+tts_escaped+'\',null)" title="Escuchar">🔊</button>';
+      '<button class="ph-play" onclick="playPhonetic('+pi+')" title="Escuchar ejemplo">🔊</button>';
     ph.appendChild(el);
   });
+}
+
+const phonData={};
+function playPhonetic(pi){
+  const p=phonData[pi]; if(!p) return;
+  // Use Murf audio if available
+  if(p.audioId){
+    speakGerman('', p.audioId);
+    return;
+  }
+  // Fallback: TTS — speak each example word with a pause between them
+  const words = p.ex.split(',').map(w=>w.trim()).filter(Boolean);
+  let idx=0;
+  function speakNext(){
+    if(idx>=words.length) return;
+    speakGerman(words[idx], null);
+    idx++;
+    if(idx<words.length) setTimeout(speakNext, 1400);
+  }
+  speakNext();
 }
 
 function speakGerman(text,audioId){

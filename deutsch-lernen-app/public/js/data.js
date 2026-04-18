@@ -1702,18 +1702,18 @@ const SPEAKING = [
 
 // ── PHONETICS ────────────────────────────────────────────────
 const PHONETICS = [
-  { s:'ch',  ex:'ich, mich, nicht',         tip:'Más suave que la J española. Como cuando empañas un espejo.',    tts:'ich' },
-  { s:'ü',   ex:'über, müde, fünf',          tip:'Di "i" con labios redondeados como para decir "u".',             tts:'über' },
-  { s:'ö',   ex:'schön, können, hören',      tip:'Di "e" con labios redondeados como para decir "o".',             tts:'schön' },
-  { s:'ß',   ex:'Straße, heißen, groß',      tip:'Es una "s" larga. Suena igual que "ss".',                        tts:'Straße' },
-  { s:'w',   ex:'wie, wo, was, wer',         tip:'¡Igual que nuestra V española! "wie" = "vi" (¿cómo?).',         tts:'wie' },
-  { s:'ei',  ex:'ein, mein, Stein',          tip:'Suena como "ei" en "veinte". Muy fácil.',                        tts:'mein' },
-  { s:'ie',  ex:'wie, Liebe, Brief',         tip:'Suena como "i" larga. "Brief" = /brief/ (carta).',               tts:'Liebe' },
-  { s:'sp',  ex:'sprechen, Spaß, Sport',     tip:'"sp" al inicio = "shp". ¡No como en español!',                  tts:'sprechen' },
-  { s:'st',  ex:'Stadt, Straße, stehen',     tip:'"st" al inicio = "sht". Stadt = /shtat/ (ciudad).',             tts:'Stadt' },
-  { s:'z',   ex:'Zeit, Zug, Zahl',           tip:'"z" = "ts". Zeit = /tsait/ (tiempo). ¡Como "pizza"!',           tts:'Zeit' },
-  { s:'r',   ex:'rot, Regen, Brot',          tip:'R gutural, desde la garganta. Más suave al final de sílaba.',   tts:'rot' },
-  { s:'ä',   ex:'spät, Mädchen, Käse',       tip:'Como la "e" abierta. "spät" = tarde (hora).',                   tts:'spät' },
+  { s:'ch',  ex:'ich, mich, nicht',         tip:'Más suave que la J española. Como cuando empañas un espejo.',    audioId:'phon_ch' },
+  { s:'ü',   ex:'über, müde, fünf',          tip:'Di "i" con labios redondeados como para decir "u".',             audioId:'phon_ue' },
+  { s:'ö',   ex:'schön, können, hören',      tip:'Di "e" con labios redondeados como para decir "o".',             audioId:'phon_oe' },
+  { s:'ß',   ex:'Straße, heißen, groß',      tip:'Es una "s" larga. Suena igual que "ss".',                        audioId:'phon_ss' },
+  { s:'w',   ex:'wie, wo, was, wer',         tip:'¡Igual que nuestra V española! "wie" = "vi" (¿cómo?).',         audioId:'phon_w' },
+  { s:'ei',  ex:'ein, mein, Stein',          tip:'Suena como "ei" en "veinte". Muy fácil.',                        audioId:'phon_ei' },
+  { s:'ie',  ex:'wie, Liebe, Brief',         tip:'Suena como "i" larga. "Brief" = /brief/ (carta).',               audioId:'phon_ie' },
+  { s:'sp',  ex:'sprechen, Spaß, Sport',     tip:'"sp" al inicio = "shp". ¡No como en español!',                  audioId:'phon_sp' },
+  { s:'st',  ex:'Stadt, Straße, stehen',     tip:'"st" al inicio = "sht". Stadt = /shtat/ (ciudad).',             audioId:'phon_st' },
+  { s:'z',   ex:'Zeit, Zug, Zahl',           tip:'"z" = "ts". Zeit = /tsait/ (tiempo). ¡Como "pizza"!',           audioId:'phon_z' },
+  { s:'r',   ex:'rot, Regen, Brot',          tip:'R gutural, desde la garganta. Más suave al final de sílaba.',   audioId:'phon_r' },
+  { s:'ä',   ex:'spät, Mädchen, Käse',       tip:'Como la "e" abierta. "spät" = tarde (hora).',                   audioId:'phon_ae' },
 ];
 
 // ── LEVELS ───────────────────────────────────────────────────
