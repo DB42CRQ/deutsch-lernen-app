@@ -1,4 +1,4 @@
-const CACHE = 'deutsch-v19';
+const CACHE = 'deutsch-v20';
 const PRECACHE = [
   '/',
   '/manifest.json',

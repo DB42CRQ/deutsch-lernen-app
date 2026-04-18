@@ -634,9 +634,9 @@ function buildListening(){
       '<div class="listen-card-actions">'+
         '<div class="speed-row">'+
           '<span class="speed-label">🐢</span>'+
-          '<button class="speed-btn active" onclick="setSpeed('+realIdx+',0.6,this)">0.6×</button>'+
+          '<button class="speed-btn" onclick="setSpeed('+realIdx+',0.6,this)">0.6×</button>'+
           '<button class="speed-btn" onclick="setSpeed('+realIdx+',0.8,this)">0.8×</button>'+
-          '<button class="speed-btn" onclick="setSpeed('+realIdx+',1.0,this)">1.0×</button>'+
+          '<button class="speed-btn active" onclick="setSpeed('+realIdx+',1.0,this)">1.0×</button>'+
           '<button class="speed-btn" onclick="setSpeed('+realIdx+',1.25,this)">1.25×</button>'+
         '</div>'+
         '<div class="listen-action-btns">'+
@@ -687,7 +687,7 @@ function setSpeed(i,speed,btn){
   btn.classList.add('active');
   if(currentAudio&&currentAudioBtn===document.getElementById('pb'+i)) currentAudio.playbackRate=speed;
 }
-function getSpeed(i){ return cardSpeeds[i]||0.6; }
+function getSpeed(i){ return cardSpeeds[i]||1.0; }
 function toggleTranscript(i){ document.getElementById('tr'+i).classList.toggle('show'); }
 function toggleVocab(i){
   const vh=document.getElementById('vh'+i);
@@ -703,33 +703,34 @@ function checkListen(di,qi,oi,correct){
   const cb=document.getElementById('lo'+di+qi+oi);
   const crb=document.getElementById('lo'+di+qi+correct);
   listenTotal++;
-  if(oi===correct){
+  const isCorrect=(oi===correct);
+  // Record actual result for score tracking
+  if(!listenResults[di]) listenResults[di]={};
+  listenResults[di][qi]=isCorrect;
+  if(isCorrect){
     cb.classList.add('correct');
     listenCorrect++;
     increaseCombo(); addXP(8,'comprensión');
   } else {
     cb.classList.add('wrong');
-    if(crb) crb.classList.add('correct');
+    if(crb) crb.classList.add('correct');  // show correct answer
     resetCombo();
   }
   updateListenScoreRow();
   updateDialogScore(di);
 }
 
+// Track per-question correctness: listenResults[di][qi] = true/false
+const listenResults={};
+
 function updateDialogScore(di){
   const item=LISTENING[di];
-  const total=item.qs.length;
-  const correct=item.qs.reduce((sum,q,qi)=>{
-    // Check if any correct button was marked
-    const correctBtn=document.getElementById('lo'+di+qi+q.ans);
-    return sum+(correctBtn&&correctBtn.classList.contains('correct')?1:0);
-  },0);
-  const answered=item.qs.reduce((sum,q,qi)=>{
-    const anyDisabled=Array.from({length:q.opts.length},(_,oi)=>document.getElementById('lo'+di+qi+oi)).some(b=>b&&b.disabled);
-    return sum+(anyDisabled?1:0);
-  },0);
+  const results=listenResults[di]||{};
+  const answered=Object.keys(results).length;
+  if(answered===0) return;
+  const correct=Object.values(results).filter(Boolean).length;
   const sc=document.getElementById('lscore'+di);
-  if(sc&&answered>0){
+  if(sc){
     const pct=Math.round(correct/answered*100);
     sc.textContent='✓ '+correct+' / '+answered+' correctas';
     sc.style.color=pct>=80?'var(--mint-d)':pct>=50?'var(--b1c)':'var(--coral)';
