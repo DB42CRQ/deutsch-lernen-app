@@ -247,7 +247,7 @@
 
     <!-- ── MODE: CARDS ── -->
     <div id="modeCardsArea">
-      <div class="flip-scene" onclick="flipCard()">
+      <div class="flip-scene" id="flipScene">
         <div class="flip-card-3d" id="flipCard3d">
           <div class="flip-face flip-front">
             <div class="word-de" id="vDe">Guten Morgen</div>
@@ -262,11 +262,11 @@
         </div>
       </div>
       <div class="card-actions" id="feedbackReveal">
-        <button class="act-btn act-reveal" onclick="flipCard()">👀 Revelar</button>
+        <button class="act-btn act-reveal" onclick="flipCard();event.stopPropagation()">👀 Revelar</button>
       </div>
       <div class="card-actions" id="feedbackHide" style="display:none;">
-        <button class="act-btn act-no"  onclick="markV(false)">✗ Repasar</button>
-        <button class="act-btn act-yes" onclick="markV(true)">✓ La sé</button>
+        <button class="act-btn act-no"  onclick="markV(false,event)">✗ Repasar</button>
+        <button class="act-btn act-yes" onclick="markV(true,event)">✓ La sé</button>
       </div>
     </div>
 
@@ -479,6 +479,19 @@
     <div class="modal-title" id="mTitle">¡Felicidades!</div>
     <div class="modal-text"  id="mText">Descripción aquí.</div>
     <button class="modal-cta" onclick="closeModal()">¡Genial! 🎊</button>
+  </div>
+</div>
+
+<!-- ── CERTIFICATE MODAL ── -->
+<div class="cert-overlay" id="certOverlay" onclick="if(event.target===this)closeCert()">
+  <div class="cert-modal">
+    <button class="cert-close" onclick="closeCert()">✕</button>
+    <div class="cert-inner" id="certInner">
+      <!-- filled by JS -->
+    </div>
+    <div class="cert-actions">
+      <button class="cert-btn" onclick="closeCert()">¡Genial! 🎊</button>
+    </div>
   </div>
 </div>
 

@@ -322,9 +322,10 @@ function renderLevelPath(){
     const passed=S.exams[lv.id]&&S.exams[lv.id].passed;
     const infoMap={a1:'Saludos, presentación y números. ¡Tu nivel actual!',a2:'Rutina, compras y viajes.',b1:'Opiniones y trabajo. Nivel Goethe-B1.',b2:'Fluidez total. ¡La meta final!'};
     const el=document.createElement('div');
-    el.className='lp-row '+lv.c+(isCur?' current':'')+(locked?' locked':'');
+    el.className='lp-row '+lv.c+(isCur?' current':'')+(locked?' locked':'')+(passed?' cert-earned':'');
     el.onclick=()=>{
       if(locked) showModal('🔒','Bloqueado','Completa el examen del nivel anterior para desbloquearlo.');
+      else if(passed) showCertificate(lv.id);
       else showModal('📌',lv.label+' — '+lv.name,infoMap[lv.id]);
     };
     const status=locked?'🔒 Bloqueado':isCur?'📍 Nivel actual — '+pct+'%':passed?'✅ Aprobado ('+S.exams[lv.id].score+'%)':'✓ Superado';
@@ -377,7 +378,7 @@ function buildVQueue(){
   shuffle(vQueue); vIdx=0;
 }
 
-function loadVocab(){ buildVQueue(); showVCard(); updateVocabScores(); }
+function loadVocab(){ buildVQueue(); showVCard(); updateVocabScores(); initFlipScene(); }
 
 function startReviewMode(){
   // Navigate to vocab tab and filter to only wrong words
@@ -480,7 +481,28 @@ function flipCard(){
   if(vDir==='de') speakGerman(w.de,w.audioId);
 }
 
-function markV(ok){
+function initFlipScene(){
+  const scene = document.getElementById('flipScene');
+  if(!scene) return;
+  // Use touchend + preventDefault to avoid double-firing on Android
+  let touchHandled = false;
+  scene.addEventListener('touchend', function(e){
+    // Don't trigger if touching a button inside
+    if(e.target.tagName === 'BUTTON') return;
+    e.preventDefault();
+    touchHandled = true;
+    flipCard();
+    setTimeout(()=>{ touchHandled = false; }, 300);
+  }, {passive: false});
+  scene.addEventListener('click', function(e){
+    if(e.target.tagName === 'BUTTON') return;
+    if(touchHandled) return; // already handled by touchend
+    flipCard();
+  });
+}
+
+function markV(ok, e){
+  if(e) e.stopPropagation(); // prevent tap bubbling to flip-scene on Android
   const w=vQueue[vIdx%vQueue.length]; S.vTot++;
   if(ok){ S.vOk++; S.vRepeat[w.de]=Math.max(0,(S.vRepeat[w.de]||0)-1); increaseCombo(); addXP(5,'vocabulario'); completeGoal(0); }
   else  { S.vNo++; S.vRepeat[w.de]=(S.vRepeat[w.de]||0)+1; resetCombo(); }
@@ -1363,7 +1385,8 @@ function finishExam(){
     const idx=LEVELS.findIndex(l=>l.id===examLvl),nextLvl=LEVELS[idx+1];
     if(nextLvl&&!S.unlocked.includes(nextLvl.id)){ S.unlocked.push(nextLvl.id); S.lvl=nextLvl.id; }
     saveState(); nav('home',document.querySelector('.nav-btn')); renderHome();
-    showModal('🎓','¡Examen '+examLvl.toUpperCase()+' aprobado!','Puntuación: '+score+'%. ¡Felicidades, chiquitina! '+(nextLvl?'Nivel '+nextLvl.label+' desbloqueado 🎉':'¡Has completado todos los niveles!'));
+    // Show certificate popup instead of plain modal
+    setTimeout(()=>showCertificate(examLvl), 600);
   } else {
     saveState(); nav('home',document.querySelector('.nav-btn')); renderHome();
     showModal('📚','Examen '+examLvl.toUpperCase()+' — '+score+'%','Necesitas '+data.passing+'% para aprobar. ¡Practica un poco más y vuelve! Tú puedes 💪');
@@ -1382,6 +1405,91 @@ function showModal(emoji,title,text){
   document.getElementById('modal').classList.add('show');
 }
 function closeModal(){ document.getElementById('modal').classList.remove('show'); }
+
+// ── CERTIFICATE ───────────────────────────────────────────────
+function showCertificate(levelId){
+  const lv = LEVELS.find(l=>l.id===levelId);
+  const exam = S.exams[levelId];
+  if(!lv || !exam) return;
+
+  const colors = {
+    a1: { bg:'#E8F8F0', border:'#6BCB77', dark:'#27AE60', medal:'🥉' },
+    a2: { bg:'#E8F3FF', border:'#4D96FF', dark:'#2980B9', medal:'🥈' },
+    b1: { bg:'#FFFBE8', border:'#FFD93D', dark:'#E67E22', medal:'🥇' },
+    b2: { bg:'#F5EEFF', border:'#9B72CF', dark:'#8E44AD', medal:'🏆' },
+  };
+  const c = colors[levelId] || colors.a1;
+  const date = exam.date || new Date().toLocaleDateString('es-ES');
+  const score = exam.score;
+
+  // Stars based on score
+  const stars = score===100?'★★★★★':score>=90?'★★★★☆':score>=80?'★★★☆☆':'★★☆☆☆';
+
+  document.getElementById('certInner').innerHTML = `
+    <div class="cert-card" style="background:${c.bg};border-color:${c.border};">
+
+      <!-- Header -->
+      <div class="cert-header" style="background:${c.border};">
+        <div class="cert-flag">🇩🇪</div>
+        <div class="cert-header-text">
+          <div class="cert-title-top">ZERTIFIKAT DEUTSCH</div>
+          <div class="cert-title-sub">Certificado de Alemán</div>
+        </div>
+        <div class="cert-medal">${c.medal}</div>
+      </div>
+
+      <!-- Body -->
+      <div class="cert-body">
+        <div class="cert-recipient">¡Enhorabuena, chiquitina!</div>
+        <div class="cert-text">Ha superado con éxito el examen oficial de nivel</div>
+
+        <div class="cert-level-badge" style="background:${c.dark};">
+          ${lv.label} — ${lv.name}
+        </div>
+
+        <div class="cert-desc">${lv.desc}</div>
+
+        <!-- Score -->
+        <div class="cert-score-row">
+          <div class="cert-score-box" style="border-color:${c.border};">
+            <div class="cert-score-num" style="color:${c.dark};">${score}%</div>
+            <div class="cert-score-lbl">Puntuación</div>
+          </div>
+          <div class="cert-score-box" style="border-color:${c.border};">
+            <div class="cert-score-num" style="color:${c.dark};font-size:1.2rem;">${stars}</div>
+            <div class="cert-score-lbl">Valoración</div>
+          </div>
+          <div class="cert-score-box" style="border-color:${c.border};">
+            <div class="cert-score-num" style="color:${c.dark};font-size:0.9rem;">${date}</div>
+            <div class="cert-score-lbl">Fecha</div>
+          </div>
+        </div>
+
+        <!-- Signature area -->
+        <div class="cert-sig-row">
+          <div class="cert-sig">
+            <div class="cert-sig-line" style="border-color:${c.dark};"></div>
+            <div class="cert-sig-lbl">Deutsch Lernen App</div>
+          </div>
+          <div class="cert-seal" style="border-color:${c.border};color:${c.dark};">
+            <div class="cert-seal-inner">
+              <div>✓</div>
+              <div style="font-size:0.45rem;font-weight:800;margin-top:2px;">${lv.label}</div>
+              <div style="font-size:0.4rem;">APROBADO</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+
+  document.getElementById('certOverlay').classList.add('show');
+  confetti();
+}
+
+function closeCert(){
+  document.getElementById('certOverlay').classList.remove('show');
+}
 
 function confirmReset(){
   // Use a custom confirm inside the modal

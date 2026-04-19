@@ -1005,3 +1005,157 @@ button { font-family: 'Nunito', sans-serif; cursor: pointer; }
   font-size: 0.78rem; opacity: 0.85;
   font-family: 'Fredoka One', sans-serif;
 }
+
+/* ── ANDROID TOUCH FIXES ── */
+button, .act-btn, .flip-scene, .opt-btn, .mode-btn, .lvl-btn, .dir-btn { touch-action: manipulation; }
+
+/* ══════════════════════════════════════════════════════════════
+   CERTIFICATE MODAL
+═══════════════════════════════════════════════════════════════ */
+.cert-overlay {
+  position: fixed; inset: 0; z-index: 9999;
+  background: rgba(0,0,0,0.65);
+  display: flex; align-items: center; justify-content: center;
+  padding: 20px;
+  opacity: 0; pointer-events: none;
+  transition: opacity 0.3s ease;
+}
+.cert-overlay.show { opacity: 1; pointer-events: all; }
+
+.cert-modal {
+  position: relative;
+  width: 100%; max-width: 400px;
+  max-height: 90vh; overflow-y: auto;
+  border-radius: 20px;
+  background: white;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.4);
+  transform: scale(0.85) translateY(20px);
+  transition: transform 0.35s cubic-bezier(0.34,1.56,0.64,1);
+}
+.cert-overlay.show .cert-modal {
+  transform: scale(1) translateY(0);
+}
+
+.cert-close {
+  position: absolute; top: 12px; right: 12px; z-index: 2;
+  background: rgba(0,0,0,0.15); border: none; border-radius: 50%;
+  width: 28px; height: 28px; color: white;
+  font-size: 0.75rem; font-weight: 800; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: background 0.2s;
+}
+.cert-close:hover { background: rgba(0,0,0,0.3); }
+
+/* Certificate Card */
+.cert-card {
+  border-radius: 16px;
+  border: 3px solid;
+  overflow: hidden;
+}
+
+.cert-header {
+  display: flex; align-items: center; gap: 10px;
+  padding: 14px 18px;
+}
+.cert-flag    { font-size: 1.8rem; }
+.cert-header-text { flex: 1; }
+.cert-title-top   { font-family: 'Fredoka One', sans-serif; font-size: 0.95rem; color: white; letter-spacing: 0.08em; }
+.cert-title-sub   { font-size: 0.65rem; color: rgba(255,255,255,0.85); font-weight: 700; margin-top: 1px; }
+.cert-medal   { font-size: 2rem; }
+
+.cert-body {
+  padding: 18px 20px 14px;
+  text-align: center;
+}
+.cert-recipient {
+  font-family: 'Fredoka One', sans-serif;
+  font-size: 1.15rem; color: #2D2D2D; margin-bottom: 6px;
+}
+.cert-text {
+  font-size: 0.75rem; color: #666; font-weight: 600;
+  margin-bottom: 14px; line-height: 1.5;
+}
+.cert-level-badge {
+  display: inline-block;
+  padding: 8px 24px; border-radius: 30px;
+  font-family: 'Fredoka One', sans-serif;
+  font-size: 1.3rem; color: white;
+  margin-bottom: 10px;
+  letter-spacing: 0.05em;
+  box-shadow: 0 4px 14px rgba(0,0,0,0.2);
+}
+.cert-desc {
+  font-size: 0.7rem; color: #888; font-weight: 600;
+  margin-bottom: 16px; font-style: italic;
+}
+
+.cert-score-row {
+  display: flex; gap: 10px; justify-content: center;
+  margin-bottom: 16px;
+}
+.cert-score-box {
+  flex: 1; border: 2px solid; border-radius: 12px;
+  padding: 10px 6px; text-align: center;
+  background: white;
+}
+.cert-score-num {
+  font-family: 'Fredoka One', sans-serif;
+  font-size: 1.35rem; line-height: 1;
+}
+.cert-score-lbl {
+  font-size: 0.58rem; font-weight: 800; color: #999;
+  margin-top: 3px; text-transform: uppercase; letter-spacing: 0.05em;
+}
+
+.cert-sig-row {
+  display: flex; align-items: flex-end; justify-content: space-between;
+  margin-top: 10px;
+}
+.cert-sig { text-align: center; flex: 1; }
+.cert-sig-line {
+  height: 0; border-top: 2px solid;
+  margin: 0 10px 4px;
+  opacity: 0.4;
+}
+.cert-sig-lbl {
+  font-size: 0.6rem; font-weight: 800; color: #999;
+  letter-spacing: 0.06em; text-transform: uppercase;
+}
+
+.cert-seal {
+  width: 52px; height: 52px; border-radius: 50%;
+  border: 3px solid; display: flex;
+  align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+.cert-seal-inner {
+  text-align: center; line-height: 1.2; font-weight: 800;
+  font-size: 1rem;
+}
+
+/* Actions */
+.cert-actions {
+  padding: 12px 20px 16px;
+  display: flex; justify-content: center;
+}
+.cert-btn {
+  padding: 12px 40px; border-radius: 30px; border: none;
+  background: linear-gradient(135deg, var(--coral), var(--orange));
+  color: white; font-family: 'Nunito', sans-serif;
+  font-weight: 900; font-size: 0.95rem; cursor: pointer;
+  box-shadow: 0 4px 16px rgba(255,107,53,0.35);
+  transition: transform 0.15s;
+}
+.cert-btn:active { transform: scale(0.96); }
+
+/* Earned indicator on level path */
+.lp-row.cert-earned {
+  cursor: pointer;
+  position: relative;
+}
+.lp-row.cert-earned::after {
+  content: '🎓 Ver certificado';
+  position: absolute; bottom: 8px; right: 12px;
+  font-size: 0.62rem; font-weight: 800;
+  color: var(--mint-d); opacity: 0.8;
+}
