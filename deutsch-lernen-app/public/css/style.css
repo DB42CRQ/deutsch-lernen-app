@@ -27,6 +27,12 @@
   --text:         #2A2A3A;
   --muted:        #8A8AA8;
 
+  /* Level accent colors */
+  --a1c:          #27AE60;
+  --a2c:          #2980B9;
+  --b1c:          #E67E22;
+  --b2c:          #8E44AD;
+
   --r-xl:         24px;
   --r-lg:         18px;
   --r-md:         12px;
@@ -879,3 +885,71 @@ button { font-family: 'Nunito', sans-serif; cursor: pointer; }
   flex-shrink: 0; transition: transform 0.15s;
 }
 .ph-play:active { transform: scale(0.88); }
+
+/* ── PRONUNCIATION FEEDBACK ── */
+.pron-actions {
+  display: flex; gap: 8px; margin: 10px 0 6px;
+}
+.pron-listen-btn, .pron-rec-btn {
+  flex: 1; padding: 10px 8px; border-radius: var(--r-md); border: 2px solid;
+  font-family: 'Nunito', sans-serif; font-weight: 800; font-size: 0.78rem;
+  cursor: pointer; transition: all 0.2s; text-align: center;
+}
+.pron-listen-btn {
+  background: var(--sky-light); border-color: var(--sky);
+  color: var(--sky-d);
+}
+.pron-listen-btn:active { transform: scale(0.95); }
+.pron-rec-btn {
+  background: var(--orange-light); border-color: var(--orange);
+  color: var(--orange);
+}
+.pron-rec-btn.rec {
+  background: var(--coral); border-color: var(--coral); color: white;
+  animation: recPulse 1s infinite;
+}
+@keyframes recPulse {
+  0%,100% { opacity: 1; } 50% { opacity: 0.7; }
+}
+.pron-rec-btn:active { transform: scale(0.95); }
+
+.pron-status {
+  font-size: 0.75rem; font-weight: 700; color: var(--muted);
+  min-height: 20px; line-height: 1.5;
+}
+
+/* Pronunciation result card */
+.pron-result {
+  background: var(--bg); border-radius: var(--r-md);
+  padding: 10px 12px; margin-top: 4px;
+  border: 1px solid var(--faint);
+}
+.pron-heard {
+  font-size: 0.72rem; color: var(--muted); margin-bottom: 8px;
+  font-weight: 700;
+}
+.pron-heard em { color: var(--text); font-style: normal; }
+.pron-words {
+  display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 8px;
+}
+.pw {
+  padding: 4px 8px; border-radius: 6px;
+  font-size: 0.85rem; font-weight: 800; font-family: 'Fredoka One', sans-serif;
+}
+.pw-ok  { background: var(--mint-light);   color: var(--mint-d); }
+.pw-err { background: #FFE5E5; color: var(--coral); text-decoration: underline wavy var(--coral); }
+.pron-score {
+  font-size: 0.78rem; font-weight: 800; padding-top: 6px;
+  border-top: 1px solid var(--faint);
+}
+
+/* ── RESET BUTTON ── */
+.reset-btn {
+  width: 100%; padding: 11px; border-radius: var(--r-md);
+  border: 2px solid var(--faint); background: transparent;
+  color: var(--muted); font-family: 'Nunito', sans-serif;
+  font-weight: 800; font-size: 0.78rem; cursor: pointer;
+  transition: all 0.2s; text-align: center;
+}
+.reset-btn:hover { border-color: var(--coral); color: var(--coral); background: #FFF0EE; }
+.reset-btn:active { transform: scale(0.97); }

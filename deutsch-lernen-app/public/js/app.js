@@ -17,6 +17,7 @@ function loadState() {
     weekXP:[0,0,0,0,0,0,0],
     weekStart:getMonday(),
     lastDay:new Date().toDateString(),
+    vRepeat:{},
   };
 }
 function saveState(){ try{ localStorage.setItem('dl5',JSON.stringify(S)); }catch(e){} }
@@ -276,16 +277,16 @@ function checkStreakBadges(){
 // ══════════════════════════════════════════════════════════════
 let vQueue=[], vIdx=0, vFlipped=false;
 let vMode='cards', vDir='de', vLevel='a1', vCat='all';
-let vRepeat={};
+// vRepeat now persisted in S.vRepeat
 
 function getVocabSource(){
-  let src = vLevel==='a1'?VOCAB : vLevel==='a2'?VOCAB_A2 : VOCAB_B1;
+  let src = vLevel==='a1'?VOCAB : vLevel==='a2'?VOCAB_A2 : vLevel==='b1'?VOCAB_B1 : VOCAB_B2;
   return vCat==='all' ? Object.values(src).flat() : (src[vCat]||[]);
 }
 
 function buildVQueue(){
   const base=getVocabSource(); vQueue=[];
-  base.forEach(w=>{ const r=vRepeat[w.de]||0; for(let i=0;i<(r>0?3:1);i++) vQueue.push(w); });
+  base.forEach(w=>{ const r=S.vRepeat[w.de]||0; for(let i=0;i<(r>0?3:1);i++) vQueue.push(w); });
   shuffle(vQueue); vIdx=0;
 }
 
@@ -316,6 +317,7 @@ function setVocabLevel(level,btn){
     a1:{all:'🌟 Todo',saludos:'👋 Saludos',numeros:'🔢 Números',familia:'👪 Familia',comida:'🍎 Comida',tiempo:'⏰ Tiempo',verbos:'⚡ Verbos',adjektivos:'🎨 Adjetivos',colores:'🌈 Colores',casa:'🏠 Casa',kleidung:'👗 Ropa',schule:'🏫 Escuela',tiere:'🐾 Animales',natur:'🌿 Naturaleza'},
     a2:{all:'🌟 Todo',ciudad:'🏙️ Ciudad',reisen:'✈️ Viajes',einkaufen:'🛍️ Compras',cuerpo:'🫀 Cuerpo',pasado:'⏳ Pasado',salud:'🏥 Salud',wetter:'🌤️ Tiempo',freizeit:'🎯 Ocio',wohnen:'🏠 Vivienda',kommunikation:'💬 Comunicación'},
     b1:{all:'🌟 Todo',trabajo:'💼 Trabajo',opiniones:'💬 Opiniones',medios:'📺 Medios',gesellschaft:'🌍 Sociedad',kultur:'🎭 Cultura',bildung:'📚 Educación',wissenschaft:'🔬 Ciencia',wirtschaft:'📈 Economía',gesundheit:'💊 Salud'},
+    b2:{all:'🌟 Todo',sprache:'🗣️ Lengua',politik:'🏛️ Política',psychologie:'🧠 Psicología',wirtschaft_b2:'💹 Economía B2'},
   };
   const labels=catLabels[level]||catLabels.a1;
   document.getElementById('catRow').innerHTML=Object.entries(labels).map(([k,l])=>
@@ -364,8 +366,8 @@ function flipCard(){
 
 function markV(ok){
   const w=vQueue[vIdx%vQueue.length]; S.vTot++;
-  if(ok){ S.vOk++; vRepeat[w.de]=Math.max(0,(vRepeat[w.de]||0)-1); increaseCombo(); addXP(5,'vocabulario'); completeGoal(0); }
-  else  { S.vNo++; vRepeat[w.de]=(vRepeat[w.de]||0)+1; resetCombo(); }
+  if(ok){ S.vOk++; S.vRepeat[w.de]=Math.max(0,(S.vRepeat[w.de]||0)-1); increaseCombo(); addXP(5,'vocabulario'); completeGoal(0); }
+  else  { S.vNo++; S.vRepeat[w.de]=(S.vRepeat[w.de]||0)+1; resetCombo(); }
   updateVocabScores(); updateStats(); checkVocabBadges();
   if(S.vTot>0&&S.vTot%15===0) showModal('🎉','¡Ronda completada!','Tarjetas: '+S.vTot+'. Correctas: '+S.vOk+'.');
   vIdx++; if(vIdx>=vQueue.length) buildVQueue();
@@ -392,8 +394,8 @@ function checkChoice(chosen,correct,word,btn){
   const ok=chosen===correct; if(!ok) btn.classList.add('wrong');
   const expl=document.getElementById('choiceExpl');
   expl.textContent=ok?'✓ ¡Correcto!':'✗ Era: "'+correct+'"'; expl.className='gram-expl '+(ok?'ok':'err');
-  S.vTot++; if(ok){ S.vOk++; vRepeat[word.de]=Math.max(0,(vRepeat[word.de]||0)-1); increaseCombo(); addXP(5,'vocabulario'); completeGoal(0); }
-  else{ S.vNo++; vRepeat[word.de]=(vRepeat[word.de]||0)+1; resetCombo(); }
+  S.vTot++; if(ok){ S.vOk++; S.vRepeat[word.de]=Math.max(0,(S.vRepeat[word.de]||0)-1); increaseCombo(); addXP(5,'vocabulario'); completeGoal(0); }
+  else{ S.vNo++; S.vRepeat[word.de]=(S.vRepeat[word.de]||0)+1; resetCombo(); }
   updateVocabScores(); updateStats(); checkVocabBadges();
   setTimeout(()=>{ vIdx++; if(vIdx>=vQueue.length) buildVQueue(); showChoiceCard(); saveState(); },1200);
 }
@@ -418,8 +420,8 @@ function checkType(){
   const ok=norm(typed)===norm(correct)||levenshtein(norm(typed),norm(correct))<=1;
   const expl=document.getElementById('typeExpl');
   expl.textContent=ok?'✓ ¡Correcto! "'+correct+'"':'✗ Respuesta correcta: "'+correct+'"'; expl.className='gram-expl '+(ok?'ok':'err');
-  S.vTot++; if(ok){ S.vOk++; vRepeat[w.de]=Math.max(0,(vRepeat[w.de]||0)-1); increaseCombo(); addXP(8,'vocabulario'); completeGoal(0); if(vDir==='de') speakGerman(w.de,w.audioId); }
-  else{ S.vNo++; vRepeat[w.de]=(vRepeat[w.de]||0)+1; resetCombo(); }
+  S.vTot++; if(ok){ S.vOk++; S.vRepeat[w.de]=Math.max(0,(S.vRepeat[w.de]||0)-1); increaseCombo(); addXP(8,'vocabulario'); completeGoal(0); if(vDir==='de') speakGerman(w.de,w.audioId); }
+  else{ S.vNo++; S.vRepeat[w.de]=(S.vRepeat[w.de]||0)+1; resetCombo(); }
   updateVocabScores(); updateStats(); checkVocabBadges();
   document.getElementById('typeNext').style.display='block'; saveState();
 }
@@ -1221,6 +1223,29 @@ function showModal(emoji,title,text){
   document.getElementById('modal').classList.add('show');
 }
 function closeModal(){ document.getElementById('modal').classList.remove('show'); }
+
+function confirmReset(){
+  // Use a custom confirm inside the modal
+  document.getElementById('mEmoji').textContent='🗑️';
+  document.getElementById('mTitle').textContent='¿Reiniciar progreso?';
+  document.getElementById('mText').textContent='Se borrarán todos tus XP, racha, badges y progreso. No se puede deshacer.';
+  const modal=document.getElementById('modal');
+  // Replace CTA button temporarily
+  const cta=modal.querySelector('.modal-cta');
+  const orig=cta.outerHTML;
+  cta.outerHTML='<div style="display:flex;gap:10px;margin-top:8px;">'+
+    '<button class="modal-cta" style="background:var(--faint);color:var(--muted);" onclick="closeModal()">Cancelar</button>'+
+    '<button class="modal-cta" style="background:var(--coral);" onclick="doReset()">Sí, reiniciar</button>'+
+    '</div>';
+  modal.classList.add('show');
+}
+
+function doReset(){
+  try{ localStorage.removeItem('dl5'); }catch(e){}
+  closeModal();
+  // Small delay so user sees the modal close
+  setTimeout(()=>{ window.location.reload(); }, 300);
+}
 
 function showToast(msg){
   const t=document.getElementById('toast'); t.textContent=msg; t.classList.add('show');

@@ -576,6 +576,66 @@ const VOCAB_B1 = {
 };
 
 
+const VOCAB_B2 = {
+  sprache: [
+    { de:'das Argument',          es:'el argumento',              ex:'Das Argument ist überzeugend.' },
+    { de:'die These',             es:'la tesis',                  ex:'Die These wurde widerlegt.' },
+    { de:'widerlegen',            es:'refutar',                   ex:'Er konnte die These nicht widerlegen.' },
+    { de:'belegen',               es:'demostrar / acreditar',     ex:'Das lässt sich belegen.' },
+    { de:'die Nuance',            es:'el matiz',                  ex:'Das ist eine wichtige Nuance.' },
+    { de:'differenzieren',        es:'diferenciar / matizar',     ex:'Man muss hier differenzieren.' },
+    { de:'das Fazit',             es:'la conclusión / resumen',   ex:'Das Fazit ist eindeutig.' },
+    { de:'präzise',               es:'preciso',                   ex:'Bitte formuliere das präziser.' },
+    { de:'mehrdeutig',            es:'ambiguo',                   ex:'Der Begriff ist mehrdeutig.' },
+    { de:'der Widerspruch',       es:'la contradicción',          ex:'Das ist ein Widerspruch.' },
+    { de:'implizieren',           es:'implicar',                  ex:'Das impliziert ein Problem.' },
+    { de:'paraphrasieren',        es:'parafrasear',               ex:'Kannst du das paraphrasieren?' },
+  ],
+  politik: [
+    { de:'die Gesetzgebung',      es:'la legislación',            ex:'Die Gesetzgebung ist komplex.' },
+    { de:'der Kompromiss',        es:'el compromiso / acuerdo',   ex:'Wir müssen einen Kompromiss finden.' },
+    { de:'die Demokratie',        es:'la democracia',             ex:'Die Demokratie braucht Beteiligung.' },
+    { de:'der Haushalt',          es:'el presupuesto',            ex:'Der Haushalt wurde verabschiedet.' },
+    { de:'die Regulierung',       es:'la regulación',             ex:'Die Regulierung ist notwendig.' },
+    { de:'der Einfluss',          es:'la influencia',             ex:'Der Einfluss der Medien wächst.' },
+    { de:'transparenz',           es:'la transparencia',          ex:'Mehr Transparenz ist nötig.' },
+    { de:'die Lobbying',          es:'el lobbying',               ex:'Lobbying beeinflusst die Politik.' },
+    { de:'das Referendum',        es:'el referéndum',             ex:'Ein Referendum wurde abgehalten.' },
+    { de:'der Konsens',           es:'el consenso',               ex:'Es gibt keinen Konsens.' },
+    { de:'die Minderheit',        es:'la minoría',                ex:'Minderheiten müssen geschützt werden.' },
+    { de:'verankern',             es:'anclar / consagrar',        ex:'Das Recht ist im Gesetz verankert.' },
+  ],
+  psychologie: [
+    { de:'das Bewusstsein',       es:'la conciencia',             ex:'Das Bewusstsein prägt uns.' },
+    { de:'die Motivation',        es:'la motivación',             ex:'Intrinsische Motivation ist stärker.' },
+    { de:'das Vorurteil',         es:'el prejuicio',              ex:'Vorurteile abzubauen braucht Zeit.' },
+    { de:'die Wahrnehmung',       es:'la percepción',             ex:'Unsere Wahrnehmung ist subjektiv.' },
+    { de:'das Unterbewusstsein',  es:'el subconsciente',          ex:'Das Unterbewusstsein steuert viel.' },
+    { de:'resilient',             es:'resiliente',                ex:'Resiliente Menschen erholen sich schnell.' },
+    { de:'das Verhalten',         es:'el comportamiento',         ex:'Das Verhalten lässt sich ändern.' },
+    { de:'die Empathie',          es:'la empatía',                ex:'Empathie ist eine soziale Fähigkeit.' },
+    { de:'kognitive Verzerrung',  es:'sesgo cognitivo',           ex:'Kognitive Verzerrungen beeinflussen uns.' },
+    { de:'das Trauma',            es:'el trauma',                 ex:'Ein Trauma kann nachwirken.' },
+    { de:'selbstreflexiv',        es:'auto-reflexivo',            ex:'Ein selbstreflexiver Mensch wächst.' },
+    { de:'die Identität',         es:'la identidad',              ex:'Identität wird sozial konstruiert.' },
+  ],
+  wirtschaft_b2: [
+    { de:'die Globalisierung',    es:'la globalización',          ex:'Die Globalisierung hat Vor- und Nachteile.' },
+    { de:'das Bruttoinlandsprodukt', es:'el producto interior bruto (PIB)', ex:'Das BIP ist gestiegen.' },
+    { de:'die Rezession',         es:'la recesión',               ex:'In der Rezession steigt die Arbeitslosigkeit.' },
+    { de:'der Protektionismus',   es:'el proteccionismo',         ex:'Protektionismus schadet dem Handel.' },
+    { de:'die Nachhaltigkeit',    es:'la sostenibilidad',         ex:'Nachhaltigkeit ist ein Unternehmensziel.' },
+    { de:'die Korruption',        es:'la corrupción',             ex:'Korruption untergräbt das Vertrauen.' },
+    { de:'der Absatzmarkt',       es:'el mercado de ventas',      ex:'Der Absatzmarkt hat sich verändert.' },
+    { de:'die Kaufkraft',         es:'el poder adquisitivo',      ex:'Die Kaufkraft sinkt durch Inflation.' },
+    { de:'fusionieren',           es:'fusionarse',                ex:'Die zwei Firmen sind fusioniert.' },
+    { de:'die Lieferkette',       es:'la cadena de suministro',   ex:'Die Lieferkette ist unterbrochen.' },
+    { de:'das Wettbewerbsrecht',  es:'el derecho de competencia', ex:'Das Wettbewerbsrecht schützt Verbraucher.' },
+    { de:'Dividende',             es:'el dividendo',              ex:'Die Dividende wurde erhöht.' },
+  ],
+};
+
+
 // ── GRAMMAR ─────────────────────────────────────────────────
 const GRAMMAR = {
   artikel: {
@@ -1805,16 +1865,26 @@ const EXAMEN = {
     title: 'Examen B2 — Intermedio alto',
     passing: 80,
     questions: [
-      { q: '"der Zusammenhang" es…',     opts: ['el resumen','la relación/contexto','el contraste','el concepto'], ans: 1, exp: 'Zusammenhang = contexto, relación.' },
-      { q: 'Konjunktiv II de "haben":',  opts: ['hatte','hätte','habe','hat'],       ans: 1, exp: 'Konjunktiv II: ich hätte = yo tendría.' },
-      { q: '"Es sei denn" significa…',   opts: ['además','a menos que','por lo tanto','aunque'], ans: 1, exp: 'es sei denn = a menos que.' },
-      { q: 'Passiv: "Man baut das Haus"→', opts: ['Das Haus baut man.','Das Haus wird gebaut.','Das Haus ist gebaut.','Das Haus baute man.'], ans: 1, exp: 'Vorgangspassiv Präsens: wird + Partizip II.' },
-      { q: '"gleichwohl" es sinónimo de…', opts: ['también','sin embargo','por eso','además'], ans: 1, exp: 'gleichwohl = sin embargo (formal).' },
-      { q: 'Genitiv: "das Buch ___ Mannes"', opts: ['der','des','dem','den'],        ans: 1, exp: 'Genitiv masculino: des Mannes.' },
-      { q: '"sich bewerben" significa…', opts: ['quejarse','postularse/solicitar','mejorar','presentarse'], ans: 1, exp: 'sich bewerben = postularse, solicitar.' },
-      { q: 'Infinitivsatz: "Er vergaß ___ anrufen."', opts: ['zu','um zu','ohne zu','an'],  ans: 0, exp: 'vergessen + zu + Infinitiv.' },
-      { q: '"vorausgesetzt dass" significa…', opts: ['aunque','con tal de que','sin que','a pesar de'], ans: 1, exp: 'vorausgesetzt dass = con tal de que.' },
-      { q: '"die Beeinträchtigung" es…', opts: ['la mejora','el deterioro/perjuicio','la opinión','la evaluación'], ans: 1, exp: 'Beeinträchtigung = deterioro, perjuicio.' },
+      { q: '"der Zusammenhang" es…',           opts: ['el resumen','el contexto/relación','el contraste','el concepto'],     ans: 1, exp: 'Zusammenhang = contexto, relación.' },
+      { q: 'Konjunktiv II de "haben":',         opts: ['hatte','hätte','habe','hat'],                                        ans: 1, exp: 'Konjunktiv II: ich hätte = yo tendría.' },
+      { q: '"Es sei denn" significa…',          opts: ['además','a menos que','por lo tanto','aunque'],                      ans: 1, exp: 'es sei denn = a menos que (condicional negativo).' },
+      { q: 'Passiv: "Man baut das Haus" →',     opts: ['Das Haus baut man.','Das Haus wird gebaut.','Das Haus ist gebaut.','Das Haus baute man.'], ans: 1, exp: 'Vorgangspassiv Präsens: wird + Partizip II.' },
+      { q: 'Genitiv: "das Buch ___ Mannes"',    opts: ['der','des','dem','den'],                                             ans: 1, exp: 'Genitiv maskulin: des Mannes.' },
+      { q: '"sich bewerben" significa…',         opts: ['quejarse','postularse/solicitar','mejorar','presentarse'],           ans: 1, exp: 'sich bewerben = postularse para un puesto.' },
+      { q: 'Infinitivsatz: "Er vergaß ___ anrufen."', opts: ['zu','um zu','ohne zu','anstatt zu'],                          ans: 0, exp: 'vergessen + zu + Infinitiv.' },
+      { q: '"vorausgesetzt, dass" significa…',  opts: ['aunque','con tal de que','sin que','a pesar de'],                   ans: 1, exp: 'vorausgesetzt, dass = con tal de que, siempre que.' },
+      { q: '"die Beeinträchtigung" es…',        opts: ['la mejora','el deterioro/perjuicio','la opinión','la evaluación'],  ans: 1, exp: 'Beeinträchtigung = deterioro, perjuicio.' },
+      { q: 'Konjunktiv II de "werden":',        opts: ['wurde','würde','werde','wird'],                                     ans: 1, exp: 'würde = Konjunktiv II de werden. Ich würde gehen = yo iría.' },
+      { q: '"gleichwohl" es sinónimo de…',      opts: ['también','sin embargo','por eso','además'],                         ans: 1, exp: 'gleichwohl = sin embargo, no obstante (registro formal).' },
+      { q: '"die Absicht" significa…',          opts: ['el resultado','la intención','el problema','la solución'],          ans: 1, exp: 'die Absicht = la intención.' },
+      { q: 'Passiv Perfekt: "Man hat das gebaut" →', opts: ['Das ist gebaut worden.','Das wurde gebaut.','Das hat man gebaut.','Das wird gebaut.'], ans: 0, exp: 'Passiv Perfekt: ist + worden.' },
+      { q: '"angesichts" + Genitiv significa…', opts: ['a pesar de','ante / en vista de','debido a','sin embargo'],        ans: 1, exp: 'angesichts + Genitiv = ante, en vista de.' },
+      { q: 'Relativsatz: "Das Haus, ___ ich kaufte…"', opts: ['das','der','den','dem'],                                    ans: 0, exp: 'Relativpronomen Neutrum Akk.: das.' },
+      { q: '"sich etw. leisten können" significa…', opts: ['poder imaginar','poder permitirse','tener que soportar','poder hacer'], ans: 1, exp: 'sich leisten können = poder permitirse (económicamente).' },
+      { q: '"wenngleich" es sinónimo de…',      opts: ['cuando','aunque','porque','si'],                                    ans: 1, exp: 'wenngleich = aunque (concesivo, registro formal).' },
+      { q: '"die Inanspruchnahme" es…',         opts: ['el uso/aprovechamiento','la crítica','la demanda','el rechazo'],    ans: 0, exp: 'Inanspruchnahme = uso, aprovechamiento (de un servicio).' },
+      { q: 'Partizip I: "ein ___ Kind" (schlafen)', opts: ['schlafendes','schlafende','schlafend','geschlafenes'],          ans: 0, exp: 'Partizip I als Adjektiv Nom. neutro: schlafen+d+es.' },
+      { q: '"unbeschadet" + Genitiv significa…', opts: ['a causa de','sin perjuicio de','a pesar de','gracias a'],         ans: 1, exp: 'unbeschadet = sin perjuicio de (lenguaje jurídico/formal).' },
     ]
   }
 };
