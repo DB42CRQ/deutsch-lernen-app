@@ -144,15 +144,16 @@ function updateComboUI(){
 // ══════════════════════════════════════════════════════════════
 //  HOME
 // ══════════════════════════════════════════════════════════════
+function renderHome(){
+  renderGreeting(); renderPhrase(); updateRing(); updateStats();
+  renderWeekChart(); renderGoals(); renderLevelPath(); renderBadges(); updateComboUI();
+}
+
 function renderGreeting(){
   const h=new Date().getHours();
-
-  const g=h<12
-    ?'¡Buenos días, chiquitina! ☀️'
-    :h<18
-    ?'¡Buenas tardes, chiquitina! 🌤️'
-    :'¡Buenas noches, chiquitina! 🌙';
-
+  const g=h<12?'¡Buenos días, chiquitina! ☀️':h<18?'¡Buenas tardes, chiquitina! 🌤️':'¡Buenas noches, chiquitina! 🌙';
+  const el=document.getElementById('bannerGreeting'); if(el) el.textContent=g;
+  // German immersion subtitle — shows German greeting too
   const deGreetings={
     0:'Gute Nacht! 🌙', 1:'Gute Nacht! 🌙', 2:'Gute Nacht! 🌙', 3:'Gute Nacht! 🌙',
     4:'Guten Morgen! ☀️', 5:'Guten Morgen! ☀️', 6:'Guten Morgen! ☀️',
@@ -163,13 +164,8 @@ function renderGreeting(){
     18:'Guten Abend! 🌆', 19:'Guten Abend! 🌆', 20:'Guten Abend! 🌆',
     21:'Guten Abend! 🌆', 22:'Gute Nacht! 🌙', 23:'Gute Nacht! 🌙',
   };
-
-  const de = deGreetings[h] || 'Hallo! 👋';
-
-  const el=document.getElementById('bannerGreeting');
-  if(el){
-    el.innerHTML = `${g} <span id="bannerDE">${de}</span>`;
-  }
+  const deEl=document.getElementById('bannerDE');
+  if(deEl) deEl.textContent=deGreetings[h]||'Hallo! 👋';
 }
 
 function renderPhrase(){
@@ -1277,8 +1273,8 @@ function buildShadowCard(p,i){
 }
 
 function shadowListen(i){
-  const d=shadowData[i]||{};
-  shadowStep[i]='listen';
+  const d=shadowData[i]||{}; 
+  shadowStep[i]='listen'; 
   speakGerman(d.text||'', d.audioId||null);
   const st=document.getElementById('shadowst'+i);
   if(st) st.textContent='Escuchando… luego haz clic en 🎤 Hablar';
