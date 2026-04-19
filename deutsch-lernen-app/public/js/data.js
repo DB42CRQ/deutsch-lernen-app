@@ -2109,6 +2109,68 @@ const LISTENING = [
       { q: '¿Qué hizo el BCE?',         opts: ['Bajó el tipo de interés','Lo mantuvo','Lo subió otra vez','Publicó un informe'], ans: 2 },
     ]
   },
+
+  // ── B2 ──────────────────────────────────────────────────────
+  {
+    level: 'B2',
+    title: '💼 Bewerbungsgespräch',
+    audioId: 'dialog_bewerbung',
+    text: 'Ein Vorstellungsgespräch für eine Marketingstelle. Frau Garcia stellt sich vor und erklärt ihre Berufserfahrung.',
+    qs: [
+      { q: 'Wie lange hat Frau Garcia in der Marketingagentur gearbeitet?',
+        opts: ['Drei Jahre','Fünf Jahre','Zwei Jahre','Zehn Jahre'], ans: 1 },
+      { q: 'Was sucht Frau Garcia?',
+        opts: ['Einen besseren Gehalt','Eine neue Herausforderung','Kürzere Arbeitszeiten','Mehr Urlaub'], ans: 1 },
+      { q: 'Warum möchte sie die Stelle wechseln?',
+        opts: ['Wegen des Gehalts','Wegen des Rufs des Unternehmens','Wegen der Arbeitszeiten','Wegen des Standorts'], ans: 1 },
+    ]
+  },
+  {
+    level: 'B2',
+    title: '🌍 Klimadiskussion',
+    audioId: 'dialog_umwelt',
+    text: 'Zwei Personen diskutieren über den Klimawandel und mögliche Lösungen. Beide sind sich einig, haben aber unterschiedliche Schwerpunkte.',
+    qs: [
+      { q: '¿Qué dice la primera persona sobre el cambio climático?',
+        opts: ['Que no es real','Que es un problema serio','Que solo afecta a otros países','Que ya está resuelto'], ans: 1 },
+      { q: '¿Qué cree la primera persona que se puede hacer a nivel individual?',
+        opts: ['Nada','Usar menos el coche','Cambiar de trabajo','Mudarse al campo'], ans: 1 },
+      { q: '¿Qué hace la segunda persona desde el año pasado?',
+        opts: ['Recicla más','Va al trabajo en bicicleta','Come menos carne','Usa transporte público'], ans: 1 },
+    ]
+  },
+  {
+    level: 'B2',
+    title: '🏠 Wohnungssuche',
+    audioId: 'dialog_wohnung',
+    text: 'Ein Interessent ruft an, um eine inserierte Wohnung zu besichtigen. Details zur Wohnung, Miete und Besichtigungstermin.',
+    qs: [
+      { q: 'Wie viele Zimmer hat die Wohnung?',
+        opts: ['Zwei','Drei','Vier','Fünf'], ans: 1 },
+      { q: '¿En qué planta está el piso?',
+        opts: ['Primera','Segunda','Tercera','Cuarta'], ans: 3 },
+      { q: '¿Cuánto cuesta el alquiler con gastos incluidos?',
+        opts: ['700 euros','800 euros','900 euros','1000 euros'], ans: 2 },
+      { q: '¿Para cuándo se acuerda la visita?',
+        opts: ['Lunes a las 18h','Martes a las 18h','Jueves a las 18h','Viernes a las 18h'], ans: 2 },
+    ]
+  },
+  {
+    level: 'B2',
+    title: '📰 Nachrichtensendung',
+    audioId: 'dialog_nachrichten',
+    text: 'Eine Nachrichtensendung mit aktuellen Meldungen über Klimapolitik und Wirtschaft.',
+    qs: [
+      { q: '¿Qué aprobó el gobierno alemán?',
+        opts: ['Un nuevo presupuesto','Un paquete de protección climática','Una ley de vivienda','Una reforma fiscal'], ans: 1 },
+      { q: '¿Qué porcentaje de energías renovables se quiere alcanzar en 2030?',
+        opts: ['60%','70%','80%','90%'], ans: 2 },
+      { q: '¿Qué crítica hacen los críticos?',
+        opts: ['Que es demasiado caro','Que no van suficientemente lejos','Que perjudica la economía','Que es imposible'], ans: 1 },
+      { q: '¿Qué hizo el BCE?',
+        opts: ['Bajó el tipo de interés','Lo mantuvo','Lo subió otra vez','Publicó un informe'], ans: 2 },
+    ]
+  },
 ];
 
 // ── SPEAKING ─────────────────────────────────────────────────
