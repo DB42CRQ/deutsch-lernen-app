@@ -1215,3 +1215,10 @@ button, .act-btn, .flip-scene, .opt-btn, .mode-btn, .lvl-btn, .dir-btn { touch-a
 }
 .gram-expl.ok .gram-full-sentence { color: var(--mint-d); }
 .gram-expl.err .gram-full-sentence { color: var(--coral); }
+
+/* ── BANNER GERMAN GREETING ── */
+.banner-de-greeting {
+  font-size: 0.85em;
+  opacity: 0.75;
+  font-family: 'Fredoka One', sans-serif;
+}
