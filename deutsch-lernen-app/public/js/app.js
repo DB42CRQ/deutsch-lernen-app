@@ -153,6 +153,19 @@ function renderGreeting(){
   const h=new Date().getHours();
   const g=h<12?'¡Buenos días, chiquitina! ☀️':h<18?'¡Buenas tardes, chiquitina! 🌤️':'¡Buenas noches, chiquitina! 🌙';
   const el=document.getElementById('bannerGreeting'); if(el) el.textContent=g;
+  // German immersion subtitle — shows German greeting too
+  const deGreetings={
+    0:'Gute Nacht! 🌙', 1:'Gute Nacht! 🌙', 2:'Gute Nacht! 🌙', 3:'Gute Nacht! 🌙',
+    4:'Guten Morgen! ☀️', 5:'Guten Morgen! ☀️', 6:'Guten Morgen! ☀️',
+    7:'Guten Morgen! ☀️', 8:'Guten Morgen! ☀️', 9:'Guten Morgen! ☀️',
+    10:'Guten Morgen! ☀️', 11:'Guten Morgen! ☀️',
+    12:'Guten Tag! 🌤️', 13:'Guten Tag! 🌤️', 14:'Guten Tag! 🌤️',
+    15:'Guten Tag! 🌤️', 16:'Guten Tag! 🌤️', 17:'Guten Tag! 🌤️',
+    18:'Guten Abend! 🌆', 19:'Guten Abend! 🌆', 20:'Guten Abend! 🌆',
+    21:'Guten Abend! 🌆', 22:'Gute Nacht! 🌙', 23:'Gute Nacht! 🌙',
+  };
+  const deEl=document.getElementById('bannerDE');
+  if(deEl) deEl.textContent=deGreetings[h]||'Hallo! 👋';
 }
 
 function renderPhrase(){
@@ -167,6 +180,77 @@ function updateStats(){
   if(w) w.textContent=S.vOk; if(g) g.textContent=S.gCorr;
   if(d) d.textContent=S.streak;
   if(f) f.style.display=S.streakFreeze>0?'flex':'none';
+  renderStatsDetail();
+}
+
+function renderStatsDetail(){
+  const el=document.getElementById('statsDetail'); if(!el) return;
+
+  // Vocab accuracy
+  const vAcc = S.vTot>0 ? Math.round(S.vOk/S.vTot*100) : 0;
+
+  // Grammar accuracy per topic
+  const gramTopics = Object.entries(S.gramProgress||{});
+  const bestGram = gramTopics.sort((a,b)=>{
+    const pa=a[1].total>0?a[1].correct/a[1].total:0;
+    const pb=b[1].total>0?b[1].correct/b[1].total:0;
+    return pb-pa;
+  });
+  const topGram = bestGram[0];
+  const weakGram = [...bestGram].reverse()[0];
+
+  // Words needing review (vRepeat > 0)
+  const reviewWords = Object.values(S.vRepeat||{}).filter(v=>v>0).length;
+
+  // Badges earned
+  const badgesEarned = (S.badges||[]).length;
+  const badgesTotal  = typeof BADGES!=='undefined' ? BADGES.length : 27;
+
+  // Total XP this week
+  const weekTotal = (S.weekXP||[]).reduce((s,v)=>s+v,0);
+
+  // Max combo
+  const maxCombo = S.maxCombo||0;
+
+  // Exam results
+  const examResults = Object.entries(S.exams||{}).map(([k,v])=>
+    `<span class="sd-exam-chip ${v.passed?'pass':'fail'}">${k.toUpperCase()} ${v.passed?'✓':'✗'} ${v.score}%</span>`
+  ).join('');
+
+  const gramName = k => ({artikel:'Artículos',verbkonj:'Conjugación',perfekt:'Pasado',negation:'Negación',kasus:'Casos',praepositionen:'Preposiciones',trennbar:'Separables',adjektive:'Adjetivos',modal:'Modales',satzbau:'Orden'}[k]||k);
+
+  el.innerHTML=`
+    <div class="sd-grid">
+      <div class="sd-item">
+        <div class="sd-val">${vAcc}%</div>
+        <div class="sd-lbl">precisión vocab</div>
+      </div>
+      <div class="sd-item">
+        <div class="sd-val">${reviewWords}</div>
+        <div class="sd-lbl">palabras a repasar</div>
+      </div>
+      <div class="sd-item">
+        <div class="sd-val">${weekTotal}</div>
+        <div class="sd-lbl">XP esta semana</div>
+      </div>
+      <div class="sd-item">
+        <div class="sd-val">${maxCombo}x</div>
+        <div class="sd-lbl">combo máximo</div>
+      </div>
+      <div class="sd-item">
+        <div class="sd-val">${badgesEarned}/${badgesTotal}</div>
+        <div class="sd-lbl">logros</div>
+      </div>
+      <div class="sd-item">
+        <div class="sd-val">${S.xp}</div>
+        <div class="sd-lbl">XP total</div>
+      </div>
+    </div>
+    ${topGram ? `<div class="sd-row"><span class="sd-tag green">💪 Mejor tema: ${gramName(topGram[0])}</span></div>` : ''}
+    ${weakGram && weakGram!==topGram ? `<div class="sd-row"><span class="sd-tag orange">📌 A mejorar: ${gramName(weakGram[0])}</span></div>` : ''}
+    ${examResults ? `<div class="sd-row" style="flex-wrap:wrap;gap:5px;">${examResults}</div>` : ''}
+    ${reviewWords>0 ? `<div class="sd-row"><button class="sd-review-btn" onclick="startReviewMode()">🔄 Repasar ${reviewWords} palabras difíciles</button></div>` : ''}
+  `;
 }
 
 function renderWeekChart(){
@@ -291,6 +375,35 @@ function buildVQueue(){
 }
 
 function loadVocab(){ buildVQueue(); showVCard(); updateVocabScores(); }
+
+function startReviewMode(){
+  // Navigate to vocab tab and filter to only wrong words
+  nav('vocab', document.querySelectorAll('.nav-btn')[1]);
+  // Get all wrong words across all levels
+  const wrongWords = [];
+  [VOCAB, VOCAB_A2, VOCAB_B1, VOCAB_B2].forEach(src=>{
+    if(!src) return;
+    Object.values(src).flat().forEach(w=>{
+      if((S.vRepeat[w.de]||0)>0) wrongWords.push(w);
+    });
+  });
+  if(wrongWords.length===0){
+    showToast('🎉 ¡No tienes palabras difíciles!'); return;
+  }
+  vQueue = [...wrongWords]; shuffle(vQueue); vIdx=0; vFlipped=false;
+  vMode='cards';
+  // Update UI
+  document.querySelectorAll('.mode-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('modeCards').classList.add('active');
+  document.getElementById('modeCardsArea').style.display='block';
+  document.getElementById('modeChoiceArea').style.display='none';
+  document.getElementById('modeTypeArea').style.display='none';
+  // Mark all level buttons as inactive to show "custom" mode
+  document.querySelectorAll('.vocab-level-row .lvl-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('vocabBannerSub').textContent='🔄 Repasando '+wrongWords.length+' palabras difíciles';
+  showVCard();
+  showToast('🔄 Modo repaso: '+wrongWords.length+' palabras');
+}
 
 function setVocabMode(mode,btn){
   vMode=mode;
@@ -463,12 +576,18 @@ function buildGramTopics(){
     const done=pct>=80&&prog.total>=6;
     const el=document.createElement('div');
     el.className='topic-card'+(done?' topic-done':'');
+    // Show last 10 questions accuracy for cleaner metric
+    const recent = prog.total>10 ? {
+      correct: prog.correct - Math.max(0, prog.correct - Math.round(prog.correct/prog.total*Math.min(10,prog.total))),
+      total: Math.min(10,prog.total)
+    } : prog;
+    const recentPct = recent.total>0?Math.round(recent.correct/recent.total*100):pct;
     el.innerHTML=
       '<span class="tc-icon">'+t.icon+(done?' ✅':'')+'</span>'+
       '<div class="tc-name">'+t.title+'</div>'+
       '<div class="tc-sub">'+t.sub+'</div>'+
       '<span class="tc-pill '+t.pill.toLowerCase()+'">'+t.pill+'</span>'+
-      (prog.total>0?'<div class="tc-progress"><div class="tc-prog-fill" style="width:'+pct+'%"></div></div><div class="tc-pct">'+pct+'%</div>':'');
+      (prog.total>0?'<div class="tc-progress"><div class="tc-prog-fill" style="width:'+pct+'%"></div></div><div class="tc-pct">'+pct+'% ('+prog.correct+'/'+prog.total+')</div>':'');
     el.onclick=()=>startGram(key);
     grid.appendChild(el);
   });
@@ -744,6 +863,15 @@ function updateListenScoreRow(){
   const lt=document.getElementById('ls-total');
   if(lc) lc.textContent=listenCorrect;
   if(lt) lt.textContent=listenTotal;
+  // Count how many dialogs are fully answered
+  const items=listenLevelFilter==='all'?LISTENING:LISTENING.filter(i=>i.level===listenLevelFilter);
+  const completed=items.filter(item=>{
+    const di=LISTENING.indexOf(item);
+    const results=listenResults[di]||{};
+    return Object.keys(results).length===item.qs.length;
+  }).length;
+  const compEl=document.getElementById('ls-completed');
+  if(compEl) compEl.textContent=completed+'/'+items.length+' diálogos';
 }
 
 
@@ -1055,6 +1183,7 @@ function buildShadowCard(p,i){
       '</div>'+
     '</div>'+
     '<div class="pron-status" id="shadowst'+i+'">Empieza escuchando el audio</div>'+
+    '<button class="shadow-next-btn" id="shadownext'+i+'" style="display:none;" onclick="shadowNext('+i+')">Siguiente frase → </button>'+
     '</div>';
 }
 
@@ -1109,7 +1238,26 @@ function shadowCompare(i){
   const d=shadowData[i]||{};
   speakGerman(d.text||'', d.audioId||null);
   const st=document.getElementById('shadowst'+i);
-  if(st) st.textContent='🔊 Escucha y compara tu pronunciación…';
+  if(st) st.textContent='🔊 Escucha y compara. ¿Cómo sonaste?';
+  // Show next button
+  const nb=document.getElementById('shadownext'+i);
+  if(nb) nb.style.display='block';
+}
+
+function shadowNext(i){
+  // Scroll to next shadow card
+  const cards=document.querySelectorAll('.speak-card');
+  let found=false;
+  cards.forEach(c=>{
+    if(found && !c.classList.contains('speak-level-header')){
+      c.scrollIntoView({behavior:'smooth',block:'center'}); found=false;
+    }
+    if(c.querySelector('#shadownext'+i)) found=true;
+  });
+  // Reset this card for reuse
+  shadowStep[i]='ready';
+  const nb=document.getElementById('shadownext'+i);
+  if(nb) nb.style.display='none';
 }
 
 // ── PHONETICS ────────────────────────────────────────────────

@@ -953,3 +953,55 @@ button { font-family: 'Nunito', sans-serif; cursor: pointer; }
 }
 .reset-btn:hover { border-color: var(--coral); color: var(--coral); background: #FFF0EE; }
 .reset-btn:active { transform: scale(0.97); }
+
+/* ── DETAILED STATISTICS CARD ── */
+.stats-detail-card {
+  background: var(--white); border: 2px solid var(--faint);
+  border-radius: var(--r-xl); padding: 14px 16px;
+  box-shadow: var(--shadow-sm);
+}
+.sd-grid {
+  display: grid; grid-template-columns: repeat(3, 1fr);
+  gap: 10px; margin-bottom: 10px;
+}
+.sd-item { text-align: center; }
+.sd-val  { font-family: 'Fredoka One', sans-serif; font-size: 1.25rem; color: var(--coral); }
+.sd-lbl  { font-size: 0.6rem; font-weight: 800; color: var(--muted); margin-top: 1px; }
+.sd-row  { display: flex; align-items: center; gap: 8px; margin-top: 8px; }
+.sd-tag  {
+  font-size: 0.72rem; font-weight: 800; padding: 4px 10px;
+  border-radius: 8px; white-space: nowrap;
+}
+.sd-tag.green  { background: var(--mint-light);   color: var(--mint-d); }
+.sd-tag.orange { background: var(--sun-light);     color: var(--sun-d); }
+.sd-exam-chip  {
+  font-size: 0.68rem; font-weight: 800; padding: 3px 8px;
+  border-radius: 6px;
+}
+.sd-exam-chip.pass { background: var(--mint-light); color: var(--mint-d); }
+.sd-exam-chip.fail { background: #FFE5E5;            color: var(--coral); }
+.sd-review-btn {
+  width: 100%; padding: 9px; border-radius: var(--r-md);
+  border: 2px solid var(--sky); background: var(--sky-light);
+  color: var(--sky-d); font-family: 'Nunito', sans-serif;
+  font-weight: 800; font-size: 0.78rem; cursor: pointer;
+  transition: all 0.2s; margin-top: 4px;
+}
+.sd-review-btn:active { transform: scale(0.97); }
+
+/* ── SHADOW NEXT BUTTON ── */
+.shadow-next-btn {
+  width: 100%; padding: 10px; margin-top: 10px;
+  border-radius: var(--r-md); border: none;
+  background: linear-gradient(135deg, var(--orange), var(--coral));
+  color: white; font-family: 'Nunito', sans-serif;
+  font-weight: 800; font-size: 0.85rem; cursor: pointer;
+  transition: transform 0.15s;
+}
+.shadow-next-btn:active { transform: scale(0.97); }
+
+/* ── BANNER GERMAN SUBTITLE ── */
+#bannerDE {
+  font-size: 0.78rem; opacity: 0.85;
+  font-family: 'Fredoka One', sans-serif;
+}
