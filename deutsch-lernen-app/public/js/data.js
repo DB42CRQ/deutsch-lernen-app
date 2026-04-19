@@ -1479,7 +1479,6 @@ const GRAMMAR = {
       { q: '"Wegen des Wetters ___ wir zu Hause geblieben."',ans:'sind',opts:['sind','haben','waren','hatten'],exp:'Wegen (1) → sind (2) wir ... geblieben.' },
     ]
   },
-,
   praeteritum: {
     title: 'Pretérito (Präteritum)', icon: '📜', sub: 'war, hatte, ging…', pill: 'A2',
     explain: {

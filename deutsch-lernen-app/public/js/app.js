@@ -713,12 +713,14 @@ function checkGramOpt(chosen,correct,exp,questionText,btn){
     speakGerman(fullSentence, null);
     // Show explanation + full sentence
     document.getElementById('gExpl').innerHTML =
-      '<div class="gram-expl-row">' +
-        '<span>✓ '+exp+'</span>' +
-        '<button class="gram-speak-btn" onclick="speakGerman(''+fullSentence.replace(/'/g,"\'")+'')">🔊</button>' +
-      '</div>' +
+      '<div class="gram-expl-row">'+
+        '<span>✓ '+exp+'</span>'+
+        '<button class="gram-speak-btn" id="gSpeakBtn">🔊</button>'+
+      '</div>'+
       '<div class="gram-full-sentence">'+fullSentence+'</div>';
     document.getElementById('gExpl').className='gram-expl ok';
+    var sb=document.getElementById('gSpeakBtn');
+    if(sb){sb._s=fullSentence;sb.onclick=function(){speakGerman(this._s,null);};}
     S.gCorr++; gCorrect++;
     S.gramProgress[gTopic].correct++;
     document.getElementById('gramScoreBadge').textContent='✓ '+gCorrect;
@@ -730,12 +732,14 @@ function checkGramOpt(chosen,correct,exp,questionText,btn){
     const fullSentence = questionText ? questionText.replace('___', correct) : correct;
     speakGerman(fullSentence, null);
     document.getElementById('gExpl').innerHTML =
-      '<div class="gram-expl-row">' +
-        '<span>✗ Correcta: "'+correct+'". '+exp.replace('✓ ','')+'</span>' +
-        '<button class="gram-speak-btn" onclick="speakGerman(''+fullSentence.replace(/'/g,"\'")+'')">🔊</button>' +
-      '</div>' +
+      '<div class="gram-expl-row">'+
+        '<span>✗ Correcta: "'+correct+'". '+exp.replace('✓ ','')+'</span>'+
+        '<button class="gram-speak-btn" id="gSpeakBtn">🔊</button>'+
+      '</div>'+
       '<div class="gram-full-sentence">'+fullSentence+'</div>';
     document.getElementById('gExpl').className='gram-expl err';
+    var sb=document.getElementById('gSpeakBtn');
+    if(sb){sb._s=fullSentence;sb.onclick=function(){speakGerman(this._s,null);};}
     resetCombo();
     document.querySelectorAll('.opt-btn').forEach(b=>{if(b.textContent.toLowerCase()===correct.toLowerCase()) b.classList.add('correct');});
   }
