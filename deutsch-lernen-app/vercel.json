@@ -1,12 +1,6 @@
 {
   "version": 2,
   "public": true,
-  "rewrites": [
-    {
-      "source": "/((?!manifest\\.json|sw\\.js|favicon\\.ico|favicon\\.png|icons/|audio/|css/|js/).*)",
-      "destination": "/index.html"
-    }
-  ],
   "headers": [
     {
       "source": "/sw.js",
@@ -23,9 +17,15 @@
       ]
     },
     {
-      "source": "/(.*)",
+      "source": "/(.*)\\.js",
       "headers": [
-        { "key": "X-Content-Type-Options", "value": "nosniff" }
+        { "key": "Cache-Control", "value": "public, max-age=86400" }
+      ]
+    },
+    {
+      "source": "/(.*)\\.css",
+      "headers": [
+        { "key": "Cache-Control", "value": "public, max-age=86400" }
       ]
     }
   ]

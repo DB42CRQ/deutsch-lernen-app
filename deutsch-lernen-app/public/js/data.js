@@ -1610,8 +1610,7 @@ const GRAMMAR = {
       { q: 'Bevor wir anfingen, ___ er schon aufgehört.', es: 'Antes de que empezáramos, él ya había parado.',    ans:'hatte',  opts:['hatte','war','habe','ist'],       exp:'aufhören → haben: hatte aufgehört.' },
     ]
   },
-;
-
+};
 
 
 // ── LISTENING ────────────────────────────────────────────────
