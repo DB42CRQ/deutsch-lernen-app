@@ -1159,3 +1159,59 @@ button, .act-btn, .flip-scene, .opt-btn, .mode-btn, .lvl-btn, .dir-btn { touch-a
   font-size: 0.62rem; font-weight: 800;
   color: var(--mint-d); opacity: 0.8;
 }
+
+/* ── GRAMMAR HINT & SPEAK ── */
+.gram-q-row {
+  display: flex; align-items: flex-start; gap: 8px; margin-bottom: 14px;
+}
+.gram-q-row .gram-q { flex: 1; margin-bottom: 0; }
+
+.gram-hint-btn {
+  flex-shrink: 0; width: 32px; height: 32px;
+  border-radius: 50%; border: 2px solid var(--sky);
+  background: var(--sky-light); font-size: 14px;
+  cursor: pointer; transition: all 0.2s;
+  display: flex; align-items: center; justify-content: center;
+  margin-top: 2px;
+}
+.gram-hint-btn:active { transform: scale(0.9); }
+
+.gram-hint-box {
+  background: var(--sky-light);
+  border: 1px solid rgba(77,150,255,0.25);
+  border-radius: var(--r-sm);
+  padding: 8px 12px;
+  font-size: 0.78rem; font-weight: 700;
+  color: var(--sky-d); margin-bottom: 12px;
+  font-style: italic;
+  animation: fadeIn 0.2s ease;
+}
+@keyframes fadeIn { from { opacity:0; transform:translateY(-4px); } to { opacity:1; transform:translateY(0); } }
+
+/* Result row with speak button */
+.gram-expl-row {
+  display: flex; align-items: center; gap: 8px;
+  margin-bottom: 6px;
+}
+.gram-expl-row span { flex: 1; }
+
+.gram-speak-btn {
+  flex-shrink: 0; width: 30px; height: 30px;
+  border-radius: 50%; border: none;
+  background: var(--white); font-size: 14px;
+  cursor: pointer; transition: transform 0.15s;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.1);
+}
+.gram-speak-btn:active { transform: scale(0.88); }
+
+/* Full correct sentence display */
+.gram-full-sentence {
+  font-family: 'Fredoka One', sans-serif;
+  font-size: 1rem; color: var(--text);
+  background: rgba(255,255,255,0.7);
+  border-radius: var(--r-sm);
+  padding: 6px 10px;
+  margin-top: 4px;
+}
+.gram-expl.ok .gram-full-sentence { color: var(--mint-d); }
+.gram-expl.err .gram-full-sentence { color: var(--coral); }

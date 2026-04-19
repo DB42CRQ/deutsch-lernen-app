@@ -660,20 +660,64 @@ function renderGramEx(){
   const og=document.getElementById('gOpts'); og.innerHTML='';
   ex.opts.forEach(o=>{
     const b=document.createElement('button'); b.className='opt-btn'; b.textContent=o;
-    b.onclick=()=>checkGramOpt(o,ex.ans,ex.exp,b); og.appendChild(b);
+    b.onclick=()=>checkGramOpt(o,ex.ans,ex.exp,ex.q,b); og.appendChild(b);
   });
   document.getElementById('gExpl').className='gram-expl'; document.getElementById('gExpl').textContent='';
   document.getElementById('gNext').style.display='none'; gAnswered=false;
+  // Reset hint
+  const hint=document.getElementById('gHint');
+  if(hint){ hint.style.display='none'; hint.textContent=''; }
+  // Show hint button (💡) — extracts Spanish from exp field
+  const hbtn=document.getElementById('gHintBtn');
+  if(hbtn){
+    hbtn.style.display='inline-flex';
+    hbtn.onclick=()=>toggleGramHint(ex);
+  }
 }
 
-function checkGramOpt(chosen,correct,exp,btn){
+function toggleGramHint(ex){
+  const hint=document.getElementById('gHint');
+  if(!hint) return;
+  if(hint.style.display==='block'){
+    hint.style.display='none'; return;
+  }
+  // Extract Spanish translation from exp field
+  // exp looks like: "sein → Präteritum: ich war." — we show it as context
+  // Also show es field if present
+  let hintText = '';
+  if(ex.es) {
+    hintText = ex.es;
+  } else {
+    // Build hint from exp: extract anything after the last colon or the whole thing
+    hintText = ex.exp.replace(/^[✓✗]\s*/, '');
+  }
+  hint.textContent = '💬 ' + hintText;
+  hint.style.display='block';
+}
+
+function checkGramOpt(chosen,correct,exp,questionText,btn){
   if(gAnswered) return; gAnswered=true;
   const ok=chosen.toLowerCase()===correct.toLowerCase();
   if(!S.gramProgress[gTopic]) S.gramProgress[gTopic]={correct:0,total:0};
   S.gramProgress[gTopic].total++;
+  // Hide hint if showing
+  const hint=document.getElementById('gHint');
+  if(hint) hint.style.display='none';
+  const hbtn=document.getElementById('gHintBtn');
+  if(hbtn) hbtn.style.display='none';
+
   if(ok){
     btn.classList.add('correct');
-    document.getElementById('gExpl').textContent='✓ '+exp;
+    // Build and speak the full correct German sentence
+    const fullSentence = questionText ? questionText.replace('___', correct) : correct;
+    speakGerman(fullSentence, null);
+    // Show explanation + full sentence
+    document.getElementById('gExpl').innerHTML =
+      '<div class="gram-expl-row">' +
+        '<span>✓ '+exp+'</span>' +
+        '<button class="gram-speak-btn" onclick="speakGerman(''+fullSentence.replace(/'/g,"\'")+'')">🔊</button>' +
+      '</div>' +
+      '<div class="gram-full-sentence">'+fullSentence+'</div>';
     document.getElementById('gExpl').className='gram-expl ok';
     S.gCorr++; gCorrect++;
     S.gramProgress[gTopic].correct++;
@@ -682,17 +726,21 @@ function checkGramOpt(chosen,correct,exp,btn){
     if(S.gCorr>=10) earnBadge('gram10');
   } else {
     btn.classList.add('wrong');
-    document.getElementById('gExpl').textContent='✗ Correcta: "'+correct+'". '+exp.replace('✓ ','');
+    // Show correct answer + speak it
+    const fullSentence = questionText ? questionText.replace('___', correct) : correct;
+    speakGerman(fullSentence, null);
+    document.getElementById('gExpl').innerHTML =
+      '<div class="gram-expl-row">' +
+        '<span>✗ Correcta: "'+correct+'". '+exp.replace('✓ ','')+'</span>' +
+        '<button class="gram-speak-btn" onclick="speakGerman(''+fullSentence.replace(/'/g,"\'")+'')">🔊</button>' +
+      '</div>' +
+      '<div class="gram-full-sentence">'+fullSentence+'</div>';
     document.getElementById('gExpl').className='gram-expl err';
     resetCombo();
     document.querySelectorAll('.opt-btn').forEach(b=>{if(b.textContent.toLowerCase()===correct.toLowerCase()) b.classList.add('correct');});
   }
   document.getElementById('gNext').style.display='block';
-  // Check if topic completed
-  const prog=S.gramProgress[gTopic];
-  const pct=prog.total>0?Math.round(prog.correct/prog.total*100):0;
   if(gIdx===(GRAMMAR[gTopic]._shuffled||GRAMMAR[gTopic].exs).length-1){
-    // Last question — show result
     document.getElementById('gNext').textContent='Ver resultado ✓';
   }
   saveState();

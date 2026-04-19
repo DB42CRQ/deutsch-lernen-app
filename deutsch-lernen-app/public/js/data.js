@@ -1329,7 +1329,7 @@ const GRAMMAR = {
       { q: 'Wir ___ pünktlich sein.',        ans: 'müssen',  opts: ['können','wollen','müssen','dürfen'], exp: 'müssen = obligación.' },
       { q: '___ ich bitte die Rechnung?',    ans: 'Kann',    opts: ['Kann','Will','Muss','Darf'],      exp: 'Kann ich = ¿Puedo? → permiso educado.' },
       { q: 'Kinder ___ nicht allein reisen.',ans: 'dürfen',  opts: ['können','wollen','müssen','dürfen'], exp: 'dürfen (neg.) = no tienen permiso.' },
-      { q: 'Er ___ das gemacht haben.',      ans: 'muss',    opts: ['muss','kann','will','soll'],      exp: 'muss = debe de (probabilidad).' },
+      { q: 'Er ___ das gemacht haben.', es: 'Él lo habría hecho.',      ans: 'muss',    opts: ['muss','kann','will','soll'],      exp: 'muss = debe de (probabilidad).' },
       { q: 'Du ___ das selbst entscheiden.', ans: 'kannst',  opts: ['kannst','willst','musst','darfst'], exp: 'können = posibilidad.' },
       { q: 'Sie ___ morgen arbeiten.',       ans: 'muss',    opts: ['muss','kann','will','soll'],      exp: 'müssen = obligación/necesidad.' },
       { q: 'Ich ___ heute nicht kommen.',    ans: 'kann',    opts: ['kann','will','muss','darf'],      exp: 'können (neg.) = no poder.' },
@@ -1384,8 +1384,8 @@ const GRAMMAR = {
       { q: 'Ihr ___ das selbst entscheiden.', ans:'könnt',  opts:['könnt','wollt','müsst','sollt'],   exp:'können = posibilidad.' },
       { q: 'Das ___ stimmen.',               ans:'könnte',  opts:['könnte','würde','sollte','müsste'],exp:'könnten = podría (Konj. II).' },
       { q: 'Ich ___ das nicht glauben.',     ans:'kann',    opts:['kann','muss','will','soll'],       exp:'kann nicht = no me lo creo.' },
-      { q: '___ du mir bitte helfen?',       ans:'Könntest',opts:['Könntest','Wolltest','Müsstest','Solltest'],exp:'Könntest du = ¿Podrías? (muy educado).' },
-      { q: 'Sie ___ Ärztin werden.',         ans:'will',    opts:['will','kann','muss','soll'],       exp:'wollen = querer ser.' },
+      { q: '___ du mir bitte helfen?', es: '¿Podrías ayudarme?',       ans:'Könntest',opts:['Könntest','Wolltest','Müsstest','Solltest'],exp:'Könntest du = ¿Podrías? (muy educado).' },
+      { q: 'Sie ___ Ärztin werden.', es: 'Ella se hará médica.',         ans:'will',    opts:['will','kann','muss','soll'],       exp:'wollen = querer ser.' },
       { q: 'Ich ___ das nicht verstehen.',   ans:'kann',    opts:['kann','muss','will','soll'],       exp:'können (neg.) = no consigo entender.' },
       { q: 'Man ___ täglich trinken.',       ans:'muss',    opts:['muss','kann','will','darf'],       exp:'müssen = necesidad vital.' },
       { q: 'Wir ___ uns beeilen.',           ans:'müssen',  opts:['können','wollen','müssen','dürfen'],exp:'müssen = urgencia.' },
@@ -1461,7 +1461,7 @@ const GRAMMAR = {
       { q: '"Heute Nacht ___ ich schlecht geschlafen."',ans:'habe',opts:['habe','bin','hatte','war'],  exp:'Heute Nacht (1) → habe (2) ich ... geschlafen.' },
       { q: 'Je mehr ich lerne, desto ___ wird es.',ans:'leichter',opts:['leichter wird es','es wird leichter','leichter','wird leichter'],exp:'je...desto: desto + Adj. + Verb + Subj.' },
       { q: '"Erst gestern ___ ich das erfahren."',ans:'habe',  opts:['habe','bin','hatte','war'],      exp:'Erst gestern (1) → habe (2) ich ... erfahren.' },
-      { q: 'Wenn ich Geld ___, würde ich reisen.',ans:'hätte', opts:['hätte','habe','hatte','haben'],  exp:'wenn-Satz Konj. II: wenn ich Geld HÄTTE.' },
+      { q: 'Wenn ich Geld ___, würde ich reisen.', es: 'Si tuviera dinero, viajaría.',ans:'hätte', opts:['hätte','habe','hatte','haben'],  exp:'wenn-Satz Konj. II: wenn ich Geld HÄTTE.' },
       { q: '"Plötzlich ___ es an der Tür."',     ans:'klingelte',opts:['klingelte','klingelt','klingt','geklingelt'],exp:'Plötzlich (1) → klingelte (2) es...' },
       { q: 'Er sagt, er ___ morgen kommen.',     ans:'werde',  opts:['werde','wird','würde','wäre'],  exp:'Indirekte Rede: er werde = él dice que vendrá.' },
       { q: '"Daher ___ ich mich entschieden."',  ans:'habe',   opts:['habe','bin','hatte','war'],      exp:'Daher (1) → habe (2) ich mich ... entschieden.' },
@@ -1479,7 +1479,139 @@ const GRAMMAR = {
       { q: '"Wegen des Wetters ___ wir zu Hause geblieben."',ans:'sind',opts:['sind','haben','waren','hatten'],exp:'Wegen (1) → sind (2) wir ... geblieben.' },
     ]
   },
-};
+,
+  praeteritum: {
+    title: 'Pretérito (Präteritum)', icon: '📜', sub: 'war, hatte, ging…', pill: 'A2',
+    explain: {
+      rule: 'El Präteritum es el tiempo pasado de la lengua escrita. En el habla se prefiere el Perfekt, pero sein, haben y los modales se usan en Präteritum incluso hablando.',
+      examples: ['Ich war müde. (Estaba cansado.)', 'Er hatte Hunger. (Tenía hambre.)', 'Sie ging nach Hause. (Ella se fue a casa.)'],
+      tip: '💡 Regla práctica: sein → war, haben → hatte, modales → konnte/musste/wollte/durfte/sollte. El resto → Perfekt en el habla.'
+    },
+    exs: [
+      { q: 'Ich ___ gestern müde.', es: 'Yo estaba cansado/a ayer.',            ans:'war',     opts:['war','hatte','wurde','sein'],        exp:'sein → Präteritum: ich war.' },
+      { q: 'Er ___ großen Hunger.', es: 'Él tenía mucha hambre.',            ans:'hatte',   opts:['hatte','war','wurde','haben'],       exp:'haben → Präteritum: er hatte.' },
+      { q: 'Wir ___ nach Berlin.', es: 'Nosotros fuimos a Berlín.',             ans:'fuhren',  opts:['fuhren','fahren','gefahren','sind'], exp:'fahren → Präteritum: wir fuhren.' },
+      { q: 'Sie ___ sehr gut.', es: 'Ella cantaba muy bien.',                ans:'sang',    opts:['sang','singen','gesungen','singte'], exp:'singen → Präteritum: sie sang.' },
+      { q: 'Ich ___ das nicht machen.', es: 'Yo no podía hacer eso.',        ans:'konnte',  opts:['konnte','kann','könnte','kannte'],   exp:'können → Präteritum: ich konnte.' },
+      { q: 'Er ___ früh aufstehen.', es: 'Él tenía que levantarse temprano.',           ans:'musste',  opts:['musste','muss','müsste','sollte'],   exp:'müssen → Präteritum: er musste.' },
+      { q: 'Das Kind ___ weinen.', es: 'El niño lloraba.',             ans:'weinte',  opts:['weinte','weint','hat geweint','wein'],exp:'weinen → Präteritum regular: weinte.' },
+      { q: 'Sie ___ das Buch.', es: 'Ella leía el libro.',                ans:'las',     opts:['las','liest','gelesen','lasen'],     exp:'lesen → Präteritum: sie las.' },
+      { q: 'Wir ___ sehr glücklich.', es: 'Éramos muy felices.',          ans:'waren',   opts:['waren','hatten','wurden','sein'],    exp:'sein Plural → Präteritum: wir waren.' },
+      { q: 'Er ___ nicht kommen.', es: 'Él no quería venir.',             ans:'wollte',  opts:['wollte','will','würde','sollte'],    exp:'wollen → Präteritum: er wollte.' },
+      { q: 'Ich ___ keinen Hunger.', es: 'Yo no tenía hambre.',           ans:'hatte',   opts:['hatte','war','bekam','haben'],       exp:'haben → Präteritum: ich hatte.' },
+      { q: 'Sie ___ die Tür.', es: 'Ella abrió la puerta.',                 ans:'öffnete', opts:['öffnete','öffnet','hat geöffnet','geöffnet'],exp:'öffnen → Präteritum regular: öffnete.' },
+      { q: 'Er ___ sehr schnell.', es: 'Él corría muy rápido.',             ans:'lief',    opts:['lief','läuft','gelaufen','laufte'],  exp:'laufen → Präteritum: er lief.' },
+      { q: 'Wir ___ viel Zeit.', es: 'Teníamos mucho tiempo.',               ans:'hatten',  opts:['hatten','waren','bekamen','haben'],  exp:'haben Plural → Präteritum: wir hatten.' },
+      { q: 'Ich ___ nicht schlafen.', es: 'No me estaba permitido dormir.',          ans:'durfte',  opts:['durfte','darf','dürfte','sollte'],   exp:'dürfen → Präteritum: ich durfte.' },
+      { q: 'Das ___ mein Fehler.', es: 'Eso era mi error.',             ans:'war',     opts:['war','hatte','wurde','wäre'],        exp:'sein → Präteritum: das war.' },
+      { q: 'Sie ___ die Aufgabe.', es: 'Ella resolvió la tarea.',             ans:'löste',   opts:['löste','löst','hat gelöst','gelöst'],exp:'lösen → Präteritum regular: löste.' },
+      { q: 'Er ___ nicht hier sein.', es: 'Él no debía estar aquí.',          ans:'sollte',  opts:['sollte','soll','würde','musste'],    exp:'sollen → Präteritum: er sollte.' },
+      { q: 'Wir ___ das Lied.', es: 'Nosotros cantamos la canción.',               ans:'sangen',  opts:['sangen','singen','gesungen','singten'],exp:'singen Plural → Präteritum: wir sangen.' },
+      { q: 'Das ___ sehr interessant.', es: 'Eso era muy interesante.',        ans:'war',     opts:['war','hatte','wurde','ist'],         exp:'sein → Präteritum: das war.' },
+      { q: 'Er ___ ins Zimmer.', es: 'Él entró en la habitación.',               ans:'trat',    opts:['trat','tritt','getreten','tretete'], exp:'treten → Präteritum: er trat.' },
+      { q: 'Sie ___ sehr laut.', es: 'Ella gritó muy fuerte.',               ans:'schrie',  opts:['schrie','schreit','schrien','schreite'],exp:'schreien → Präteritum: sie schrie.' },
+    ]
+  },
+
+  futur: {
+    title: 'Futuro (Futur I)', icon: '🔮', sub: 'werden + Infinitiv', pill: 'A2',
+    explain: {
+      rule: 'Futur I = werden (conjugado) + Infinitivo al final. En el habla se usa más el Präsens con adverbio de tiempo. Futur I también expresa suposición en el presente.',
+      examples: ['Ich werde morgen lernen. (Estudiaré mañana.)', 'Er wird müde sein. (Debe de estar cansado.)', 'Wir werden gewinnen! (¡Ganaremos!)'],
+      tip: '💡 werden: ich werde, du wirst, er/sie/es wird, wir werden, ihr werdet, sie werden. El infinitivo va SIEMPRE al final.'
+    },
+    exs: [
+      { q: 'Ich ___ morgen lernen.', es: 'Estudiaré mañana.',           ans:'werde',   opts:['werde','wird','wirst','werden'],     exp:'ich + werden = ich werde.' },
+      { q: 'Er ___ bald kommen.', es: 'Él vendrá pronto.',              ans:'wird',    opts:['werde','wird','wirst','werden'],     exp:'er + werden = wird.' },
+      { q: 'Wir ___ das schaffen.', es: '¡Lo conseguiremos!',            ans:'werden',  opts:['werde','wird','wirst','werden'],     exp:'wir + werden = werden.' },
+      { q: 'Du ___ das bereuen.', es: 'Lo lamentarás.',              ans:'wirst',   opts:['werde','wird','wirst','werden'],     exp:'du + werden = wirst.' },
+      { q: 'Ihr ___ es verstehen.', es: 'Lo entenderéis.',            ans:'werdet',  opts:['werden','werdet','wirst','wird'],    exp:'ihr + werden = werdet.' },
+      { q: 'Ich werde das Buch ___.', es: 'Leeré el libro.',          ans:'lesen',   opts:['lesen','lese','gelesen','las'],      exp:'Futur I: werde + Infinitiv am Ende: lesen.' },
+      { q: 'Er wird nach Berlin ___.', es: 'Irá a Berlín.',         ans:'fahren',  opts:['fahren','fährt','gefahren','fuhr'],  exp:'Futur I: wird + Infinitiv: fahren.' },
+      { q: 'Das ___ schwierig sein.', es: 'Eso será difícil.',          ans:'wird',    opts:['werde','wird','wirst','werden'],     exp:'das + werden = wird.' },
+      { q: '"Sie ___ wohl schlafen." (Vermutung)', es: 'Debe de estar durmiendo.', ans:'wird', opts:['werde','wird','wirst','werden'],   exp:'wird = debe de (suposición).' },
+      { q: 'Morgen ___ es regnen.', es: 'Mañana lloverá.',            ans:'wird',    opts:['werde','wird','wirst','werden'],     exp:'es + werden = wird.' },
+      { q: 'Ich ___ dir helfen.', es: 'Te ayudaré.',              ans:'werde',   opts:['werde','wird','wirst','werden'],     exp:'ich + werden = werde.' },
+      { q: 'Sie werden die Prüfung ___.', es: 'Aprobarán el examen.',      ans:'bestehen',opts:['bestehen','besteht','bestanden','bestand'],exp:'werden + Infinitiv: bestehen.' },
+      { q: 'Er ___ das nie akzeptieren.', es: 'Él nunca lo aceptará.',      ans:'wird',    opts:['werde','wird','wirst','werden'],     exp:'er + werden = wird.' },
+      { q: 'Du ___ es sehen!', es: '¡Ya lo verás!',                 ans:'wirst',   opts:['werde','wird','wirst','werden'],     exp:'du + werden = wirst.' },
+      { q: 'Ich ___ niemals aufgeben.', es: 'Nunca me rendiré.',        ans:'werde',   opts:['werde','wird','wirst','werden'],     exp:'ich + werden = werde.' },
+      { q: 'Wir ___ eine Lösung finden.', es: 'Encontraremos una solución.',      ans:'werden',  opts:['werde','wird','wirst','werden'],     exp:'wir + werden = werden.' },
+      { q: 'In zehn Jahren ___ alles anders sein.', es: 'En diez años todo será diferente.', ans:'wird', opts:['werde','wird','wirst','werden'],  exp:'Futur für Vorhersagen: wird.' },
+      { q: 'Sie ___ Ärztin werden.', es: 'Ella se hará médica.',           ans:'wird',    opts:['werde','wird','wirst','werden'],     exp:'sie (ella) + werden = wird.' },
+      { q: '"Er ___ krank sein." (Vermutung)', es: 'Debe de estar enfermo.', ans:'wird',    opts:['werde','wird','wirst','werden'],     exp:'wird = debe de estar (suposición).' },
+      { q: 'Das ___ ein langer Tag ___.', es: 'Será un día largo.',      ans:'werden ... sein', opts:['werden ... sein','wird ... sein','werde ... sein','wirst ... sein'], exp:'Das wird ein langer Tag sein.' },
+      { q: 'Sie ___ es nicht glauben.', es: 'Ella no lo creerá.',        ans:'wird',    opts:['werde','wird','wirst','werden'],     exp:'sie (ella) + werden = wird.' },
+      { q: 'Wir ___ bald ankommen.', es: 'Llegaremos pronto.',           ans:'werden',  opts:['werde','wird','wirst','werden'],     exp:'wir + werden = werden.' },
+    ]
+  },
+
+  konjunktiv2: {
+    title: 'Konjunktivo II', icon: '✨', sub: 'würde, wäre, hätte…', pill: 'B1',
+    explain: {
+      rule: 'El Konjunktiv II expresa situaciones hipotéticas, deseos, condiciones irreales y peticiones educadas. Formas: würde + Infinitiv (condicional general), wäre (sería), hätte (tendría), könnnte/müsste/dürfte/sollte.',
+      examples: ['Ich würde gern reisen. (Me gustaría viajar.)', 'Wenn ich Zeit hätte… (Si tuviera tiempo…)', 'Das wäre toll! (¡Eso sería genial!)'],
+      tip: '💡 Para casi todo: würde + Infinitiv. Solo sein→wäre, haben→hätte y modales tienen formas propias: könnte, müsste, sollte, dürfte.'
+    },
+    exs: [
+      { q: 'Ich ___ gern nach Deutschland reisen.', es: 'Me gustaría viajar a Alemania.',   ans:'würde',   opts:['würde','wäre','hätte','könnte'],    exp:'würde + Infinitiv = condicional.' },
+      { q: 'Das ___ sehr schön.', es: 'Eso sería muy bonito.',                     ans:'wäre',    opts:['würde','wäre','hätte','könnte'],    exp:'wäre = Konj. II de sein.' },
+      { q: 'Wenn ich Geld ___, würde ich reisen.', es: 'Si tuviera dinero, viajaría.',    ans:'hätte',   opts:['hätte','wäre','würde','könnte'],    exp:'hätte = Konj. II de haben (si tuviera).' },
+      { q: 'Ich ___ das nie tun.', es: 'Nunca haría eso.',                    ans:'würde',   opts:['würde','wäre','hätte','könnte'],    exp:'würde + Infinitiv.' },
+      { q: '___ du mir bitte helfen?', es: '¿Podrías ayudarme?',                ans:'Könntest',opts:['Könntest','Würdest','Wärst','Hättest'],exp:'Könntest du = ¿Podrías? (educado).' },
+      { q: 'Wenn ich du ___, würde ich lernen.', es: 'Si yo fuera tú, estudiaría.',      ans:'wäre',    opts:['wäre','hätte','würde','könnte'],    exp:'wäre = si yo fuera tú.' },
+      { q: 'Ich ___ mehr schlafen.', es: 'Debería dormir más.',                  ans:'sollte',  opts:['sollte','würde','wäre','hätte'],    exp:'sollte = debería (Konj. II de sollen).' },
+      { q: 'Wenn es nicht regnete, ___ wir wandern.', es: 'Si no lloviera, haríamos senderismo.', ans:'würden',  opts:['würden','wären','hätten','könnten'],exp:'würden + Infinitiv = iríamos.' },
+      { q: 'Du ___ vorsichtiger sein.', es: 'Deberías ser más cuidadoso/a.',               ans:'solltest',opts:['solltest','würdest','wärst','hättest'],exp:'solltest = deberías.' },
+      { q: 'Ich ___ mir das leisten.', es: 'Podría permitirme eso.',                ans:'könnte',  opts:['könnte','würde','wäre','hätte'],    exp:'könnte = podría (Konj. II de können).' },
+      { q: 'An deiner Stelle ___ ich das ablehnen.', es: 'En tu lugar, rechazaría eso.',  ans:'würde',   opts:['würde','wäre','hätte','könnte'],    exp:'würde + ablehnen = rechazaría.' },
+      { q: 'Das ___ besser gewesen.', es: 'Eso habría sido mejor.',                 ans:'wäre',    opts:['wäre','hätte','würde','könnte'],    exp:'wäre gewesen = habría sido (Konj. II Perfekt).' },
+      { q: 'Wir ___ früher kommen sollen.', es: 'Tendríamos que haber venido antes.',           ans:'hätten',  opts:['hätten','wären','würden','könnten'],exp:'hätten sollen = tendríamos que haber venido.' },
+      { q: 'Das ___ ein Traum.', es: 'Eso sería un sueño.',                      ans:'wäre',    opts:['wäre','würde','hätte','könnte'],    exp:'wäre = eso sería un sueño.' },
+      { q: 'Ich ___ lieber Tee trinken.', es: 'Preferiría beber té.',             ans:'würde',   opts:['würde','wäre','hätte','könnte'],    exp:'würde + lieber + Infinitiv = preferiría.' },
+      { q: '___ Sie mir bitte sagen, wo…?', es: '¿Podrían decirme dónde…?',           ans:'Könnten', opts:['Könnten','Würden','Wären','Hätten'], exp:'Könnten Sie = ¿Podrían ustedes? (muy educado).' },
+      { q: 'Ohne dich ___ es langweilig.', es: 'Sin ti sería aburrido.',            ans:'wäre',    opts:['wäre','würde','hätte','könnte'],    exp:'wäre = sería aburrido sin ti.' },
+      { q: 'Er ___ das gemacht haben.', es: 'Él lo habría hecho.',               ans:'hätte',   opts:['hätte','wäre','würde','könnte'],    exp:'hätte gemacht = habría hecho.' },
+      { q: 'Sie ___ gern Pilotin werden.', es: 'A ella le gustaría hacerse piloto.',            ans:'würde',   opts:['würde','wäre','hätte','könnte'],    exp:'würde werden = le gustaría hacerse.' },
+      { q: 'Wenn ich könnte, ___ ich sofort gehen.', es: 'Si pudiera, me iría ahora mismo.',  ans:'würde',   opts:['würde','wäre','hätte','könnte'],    exp:'würde gehen = me iría.' },
+      { q: 'Das ___ ich nie gesagt.', es: 'Yo nunca habría dicho eso.',                 ans:'hätte',   opts:['hätte','wäre','würde','könnte'],    exp:'hätte gesagt = nunca lo habría dicho.' },
+      { q: 'Er ___ die Prüfung bestehen können.', es: 'Él habría podido aprobar el examen.',     ans:'hätte',   opts:['hätte','wäre','würde','könnte'],    exp:'hätte können = habría podido aprobar.' },
+    ]
+  },
+
+  plusquamperfekt: {
+    title: 'Plusquamperfecto', icon: '⏮️', sub: 'hatte/war + Partizip II', pill: 'B1',
+    explain: {
+      rule: 'El Plusquamperfekt expresa una acción ocurrida ANTES de otra acción pasada. Se forma con hatte/war (Präteritum) + Partizip II. Misma regla que Perfekt: movimiento → war, resto → hatte.',
+      examples: ['Nachdem ich gegessen hatte, schlief ich. (Después de haber comido, dormí.)', 'Als er ankam, war sie schon gegangen. (Cuando llegó, ella ya se había ido.)'],
+      tip: '💡 Clave: Plusquamperfekt aparece con "nachdem" y "als". La acción en Plusquamperfekt ocurre cronológicamente PRIMERO.'
+    },
+    exs: [
+      { q: 'Als er ankam, ___ sie schon gegangen.', es: 'Cuando él llegó, ella ya se había ido.',          ans:'war',    opts:['war','hatte','ist','hat'],        exp:'gehen → sein: war gegangen.' },
+      { q: 'Nachdem ich gegessen ___, schlief ich.', es: 'Después de haber comido, me dormí.',         ans:'hatte',  opts:['hatte','war','habe','bin'],       exp:'essen → haben: hatte gegessen.' },
+      { q: 'Er ___ das Buch schon gelesen.', es: 'Él ya había leído el libro.',                 ans:'hatte',  opts:['hatte','war','habe','ist'],       exp:'lesen → haben: hatte gelesen.' },
+      { q: 'Nachdem sie ___ angekommen, rief sie an.', es: 'Después de haber llegado, ella llamó.',       ans:'war',    opts:['war','hatte','ist','hat'],        exp:'ankommen → sein: war angekommen.' },
+      { q: 'Als wir kamen, ___ er schon gegangen.', es: 'Cuando llegamos, él ya se había ido.',          ans:'war',    opts:['war','hatte','ist','hat'],        exp:'gehen → sein: war gegangen.' },
+      { q: 'Ich ___ das Formular schon ausgefüllt.', es: 'Yo ya había rellenado el formulario.',         ans:'hatte',  opts:['hatte','war','habe','bin'],       exp:'ausfüllen → haben: hatte ausgefüllt.' },
+      { q: 'Nachdem er ___ geschlafen, war er fit.', es: 'Después de haber dormido, estaba en forma.',         ans:'hatte',  opts:['hatte','war','habe','bin'],       exp:'schlafen → haben: hatte geschlafen.' },
+      { q: 'Sie ___ noch nie in Berlin gewesen.', es: 'Ella nunca había estado en Berlín.',            ans:'war',    opts:['war','hatte','ist','hat'],        exp:'sein → war gewesen.' },
+      { q: 'Als der Film begann, ___ wir uns schon gesetzt.', es: 'Cuando empezó la película, ya nos habíamos sentado.',ans:'hatten', opts:['hatten','waren','haben','sind'],  exp:'setzen → haben: hatten gesetzt.' },
+      { q: 'Er aß, weil er ___ nicht gefrühstückt.', es: 'Comió porque no había desayunado.',        ans:'hatte',  opts:['hatte','war','habe','ist'],       exp:'frühstücken → haben: hatte gefrühstückt.' },
+      { q: 'Nachdem sie ___ gegangen, wurde es ruhig.', es: 'Después de que ella se fue, se hizo el silencio.',      ans:'war',    opts:['war','hatte','ist','hat'],        exp:'gehen → sein: war gegangen.' },
+      { q: 'Ich wusste, dass er ___ gelogen.', es: 'Sabía que él había mentido.',               ans:'hatte',  opts:['hatte','war','habe','ist'],       exp:'lügen → haben: hatte gelogen.' },
+      { q: 'Sie ___ vorher noch nie geflogen.', es: 'Ella nunca había volado antes.',              ans:'war',    opts:['war','hatte','ist','hat'],        exp:'fliegen → sein: war geflogen.' },
+      { q: 'Nachdem er das Buch ___ gelesen, schrieb er.', es: 'Después de haber leído el libro, escribió.',   ans:'hatte',  opts:['hatte','war','habe','bin'],       exp:'lesen → haben: hatte gelesen.' },
+      { q: 'Er merkte, dass er den Schlüssel ___ vergessen.', es: 'Se dio cuenta de que había olvidado la llave.',ans:'hatte',  opts:['hatte','war','habe','ist'],       exp:'vergessen → haben: hatte vergessen.' },
+      { q: 'Wir ___ uns schon kennengelernt.', es: 'Ya nos habíamos conocido.',               ans:'hatten', opts:['hatten','waren','haben','sind'],  exp:'kennenlernen → haben: hatten kennengelernt.' },
+      { q: 'Als er aufwachte, ___ sie schon abgereist.', es: 'Cuando se despertó, ella ya había partido.',     ans:'war',    opts:['war','hatte','ist','hat'],        exp:'abreisen → sein: war abgereist.' },
+      { q: 'Sie aß nicht, weil sie schon ___ gegessen.', es: 'No comió porque ya había comido.',     ans:'hatte',  opts:['hatte','war','habe','ist'],       exp:'essen → haben: hatte gegessen.' },
+      { q: 'Nachdem er ___ aufgestanden, duschte er.', es: 'Después de haberse levantado, se duchó.',       ans:'war',    opts:['war','hatte','ist','hat'],        exp:'aufstehen → sein: war aufgestanden.' },
+      { q: 'Ich erkannte ihn, weil ich ihn früher ___ gesehen.', es: 'Lo reconocí porque lo había visto antes.', ans:'hatte', opts:['hatte','war','habe','ist'],   exp:'sehen → haben: hatte gesehen.' },
+      { q: 'Als der Arzt kam, ___ er schon eingeschlafen.', es: 'Cuando llegó el médico, ya se había dormido.',  ans:'war',    opts:['war','hatte','ist','hat'],        exp:'einschlafen → sein: war eingeschlafen.' },
+      { q: 'Bevor wir anfingen, ___ er schon aufgehört.', es: 'Antes de que empezáramos, él ya había parado.',    ans:'hatte',  opts:['hatte','war','habe','ist'],       exp:'aufhören → haben: hatte aufgehört.' },
+    ]
+  },
+;
 
 
 
@@ -1808,7 +1940,11 @@ const BADGES = [
   { id: 'gram_trennbar',     e: '✂️', n: 'Separables',    d: 'Dominaste los verbos separables' },
   { id: 'gram_adjektive',    e: '🎨', n: 'Adjetivos',     d: 'Dominaste la declinación adjetival' },
   { id: 'gram_modal',        e: '💬', n: 'Modales',       d: 'Dominaste los verbos modales' },
-  { id: 'gram_satzbau',      e: '🔀', n: 'Orden palabras',d: 'Dominaste el orden de palabras' },
+  { id: 'gram_satzbau',        e: '🔀', n: 'Orden palabras',   d: 'Dominaste el orden de palabras' },
+  { id: 'gram_praeteritum',    e: '📜', n: 'Pretérito',        d: 'Dominaste el Präteritum' },
+  { id: 'gram_futur',          e: '🔮', n: 'Futuro',           d: 'Dominaste el Futur I' },
+  { id: 'gram_konjunktiv2',    e: '✨', n: 'Konjunktivo II',   d: 'Dominaste el Konjunktiv II' },
+  { id: 'gram_plusquamperfekt',e: '⏮️', n: 'Plusquamperfecto', d: 'Dominaste el Plusquamperfekt' },
 ];
 
 // ── EXAMEN QUESTIONS ─────────────────────────────────────────
