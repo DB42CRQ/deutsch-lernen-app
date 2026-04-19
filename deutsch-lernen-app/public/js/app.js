@@ -169,7 +169,10 @@ function renderGreeting(){
 }
 
 function renderPhrase(){
-  const p=PHRASES[new Date().getDate()%PHRASES.length];
+  // Use day-of-year for more variety across months
+  const now=new Date();
+  const dayOfYear=Math.floor((now - new Date(now.getFullYear(),0,0)) / 86400000);
+  const p=PHRASES[dayOfYear%PHRASES.length];
   const de=document.getElementById('phraseDE'); const es=document.getElementById('phraseES');
   if(de) de.textContent=p.de; if(es) es.textContent=p.es;
 }
@@ -915,7 +918,11 @@ function buildSpeaking(){
 
 // ── SENTENCE OF THE DAY ──────────────────────────────────────
 function renderSentenceOfDay(){
-  const idx=new Date().getDate()%SPEAKING.length;
+  // Habla: show a random SPEAKING phrase for pronunciation practice
+  // Uses day-of-year so it changes daily
+  const now=new Date();
+  const dayOfYear=Math.floor((now - new Date(now.getFullYear(),0,0)) / 86400000);
+  const idx=dayOfYear%SPEAKING.length;
   const p=SPEAKING[idx];
   const de=document.getElementById('dailySpeakDE');
   const es=document.getElementById('dailySpeakES');
@@ -924,7 +931,9 @@ function renderSentenceOfDay(){
 }
 
 function playSentenceOfDay(){
-  const idx=new Date().getDate()%SPEAKING.length;
+  const now=new Date();
+  const dayOfYear=Math.floor((now - new Date(now.getFullYear(),0,0)) / 86400000);
+  const idx=dayOfYear%SPEAKING.length;
   const p=SPEAKING[idx];
   speakGerman(p.de,p.audioId||null);
   const st=document.getElementById('dailyStatus');
@@ -935,7 +944,9 @@ let dailyMicTimer=null;
 function toggleDailyMic(){
   const lbl=document.getElementById('dailyMicLabel');
   const st=document.getElementById('dailyStatus');
-  const idx=new Date().getDate()%SPEAKING.length;
+  const now=new Date();
+  const dayOfYear=Math.floor((now - new Date(now.getFullYear(),0,0)) / 86400000);
+  const idx=dayOfYear%SPEAKING.length;
   const p=SPEAKING[idx];
   if(srSupported){
     startRecognition(p.de, null, lbl, st, ()=>{
