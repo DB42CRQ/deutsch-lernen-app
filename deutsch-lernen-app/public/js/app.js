@@ -2,7 +2,7 @@
 //  STATE
 // ══════════════════════════════════════════════════════════════
 const STATE_KEY = 'dl5';
-const STATE_VERSION = 4;
+const STATE_VERSION = 5;
 const DAY_MS = 24 * 60 * 60 * 1000;
 
 function logWarn(scope, err){
@@ -42,6 +42,7 @@ function createDefaultState() {
       totalAllTime:0,
       bestPct:0,
       phraseStats:{},
+      recentFocus:{ key:'', remaining:0 },
     },
   };
 }
@@ -65,6 +66,11 @@ function migrateState(raw) {
   if(!Number.isFinite(next.speak.totalAllTime)) next.speak.totalAllTime = 0;
   if(!Number.isFinite(next.speak.bestPct)) next.speak.bestPct = 0;
   if(!next.speak.phraseStats || typeof next.speak.phraseStats !== 'object') next.speak.phraseStats = {};
+  if(!next.speak.recentFocus || typeof next.speak.recentFocus !== 'object'){
+    next.speak.recentFocus = { key:'', remaining:0 };
+  }
+  if(typeof next.speak.recentFocus.key !== 'string') next.speak.recentFocus.key = '';
+  if(!Number.isFinite(next.speak.recentFocus.remaining)) next.speak.recentFocus.remaining = 0;
   if(!Array.isArray(next.badges)) next.badges = [];
   if(!Array.isArray(next.unlocked) || !next.unlocked.length) next.unlocked = ['a1'];
   return next;
@@ -1188,7 +1194,7 @@ function getAdaptiveSpeakPhrases(){
     return { p, idx, weak: getPhraseWeakScore(idx) };
   });
   const visible = speakWeakOnly ? mapped.filter(x=>!x.weak.mastered) : mapped;
-  return visible.sort((a,b)=>{
+  let sorted = visible.sort((a,b)=>{
     const ai = a.idx;
     const bi = b.idx;
     const aw = a.weak;
@@ -1200,6 +1206,24 @@ function getAdaptiveSpeakPhrases(){
     if(bw.score !== aw.score) return bw.score - aw.score;
     return ai - bi;
   }).map(x=>x.p);
+
+  // Keep the last trained phrase visible for a few review rounds.
+  const focus = S.speak.recentFocus || { key:'', remaining:0 };
+  if(focus.key && focus.remaining>0){
+    const m = /^speak:(\d+)$/.exec(focus.key);
+    if(m){
+      const idx = Number(m[1]);
+      const focusPhrase = SPEAKING[idx];
+      if(focusPhrase){
+        const levelMatch = speakLevelFilter==='all' || focusPhrase.level===speakLevelFilter;
+        const notHiddenByWeakOnly = !speakWeakOnly || !getPhraseWeakScore(idx).mastered;
+        if(levelMatch && notHiddenByWeakOnly){
+          sorted = [focusPhrase, ...sorted.filter(p=>p!==focusPhrase)];
+        }
+      }
+    }
+  }
+  return sorted;
 }
 
 function renderSpeakWeakPanel(){
@@ -1243,6 +1267,11 @@ function handlePronunciationOutcome(result, meta={}){
   const pct = result.pct||0;
   const mode = meta.mode||'normal';
   const phraseKey = meta.phraseKey || ('anon:'+Date.now());
+  if(S.speak.recentFocus && S.speak.recentFocus.key && S.speak.recentFocus.key !== phraseKey){
+    S.speak.recentFocus.remaining = Math.max(0, (S.speak.recentFocus.remaining||0) - 1);
+    if(S.speak.recentFocus.remaining===0) S.speak.recentFocus.key='';
+  }
+  S.speak.recentFocus = { key: phraseKey, remaining: 3 };
   recordSpeakAttempt(phraseKey, pct);
   const base = mode==='shadow' ? 8 : mode==='daily' ? 6 : 5;
   const xpEarned = pct>=80 ? base+4 : pct>=60 ? base+1 : 2;
@@ -1449,6 +1478,7 @@ function showPronFeedback(heard, target, statusEl){
   const heardWords  = heard.split(/\s+/).filter(Boolean);
 
   // Match each target word to best heard word
+  const misses = [];
   let correct=0, html='<div class="pron-result">';
   html+='<div class="pron-heard">🎙️ Escuchado: <em>'+escapeHTML(heard)+'</em></div>';
   html+='<div class="pron-words">';
@@ -1461,6 +1491,7 @@ function showPronFeedback(heard, target, statusEl){
     const maxDist=Math.max(1,Math.floor(tn.length*0.35));
     const ok=bestDist<=maxDist;
     if(ok) correct++;
+    else misses.push({ target: tw, heard: bestWord||'—', dist: bestDist });
     html+='<span class="pw '+(ok?'pw-ok':'pw-err')+'">'+escapeHTML(tw)+'</span> ';
   });
 
@@ -1480,10 +1511,23 @@ function showPronFeedback(heard, target, statusEl){
   if(tips.length){
     html+='<div class="sd-row" style="margin-top:8px;display:block;">'+tips.map(t=>'<div class="sd-tag orange" style="display:block;margin:4px 0;">'+escapeHTML(t)+'</div>').join('')+'</div>';
   }
+  if(misses.length){
+    const topMisses = misses.slice(0,3);
+    html+='<div class="sd-row" style="margin-top:8px;display:block;">';
+    html+='<div class="sd-tag orange" style="display:block;margin:4px 0;">🎯 Corrige estas palabras ahora:</div>';
+    topMisses.forEach(m=>{
+      html+='<div class="sd-tag" style="display:block;margin:4px 0;">'+
+        'Di: <strong>'+escapeHTML(m.target)+'</strong> · escuchado: '+escapeHTML(m.heard)+
+      '</div>';
+    });
+    html+='</div>';
+  } else {
+    html+='<div class="sd-row" style="margin-top:8px;"><span class="sd-tag green">✅ Todas las palabras clave salieron bien</span></div>';
+  }
   html+='</div>';
 
   statusEl.innerHTML=html;
-  return { pct, heard, target };
+  return { pct, heard, target, misses };
 }
 
 function getPronunciationCoaching(target, pct){
