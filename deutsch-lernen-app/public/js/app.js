@@ -1,9 +1,26 @@
 // ══════════════════════════════════════════════════════════════
 //  STATE
 // ══════════════════════════════════════════════════════════════
-function loadState() {
-  try { const s = localStorage.getItem('dl5'); if (s) return JSON.parse(s); } catch(e) {}
+const STATE_KEY = 'dl5';
+const STATE_VERSION = 3;
+const DAY_MS = 24 * 60 * 60 * 1000;
+
+function logWarn(scope, err){
+  console.warn('[deutsch-app]', scope, err);
+}
+
+function escapeHTML(value){
+  return String(value)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
+function createDefaultState() {
   return {
+    stateVersion: STATE_VERSION,
     xp:0, streak:1, streakFreeze:0,
     vOk:0, vNo:0, vTot:0,
     gCorr:0, combo:0, maxCombo:0,
@@ -18,9 +35,47 @@ function loadState() {
     weekStart:getMonday(),
     lastDay:new Date().toDateString(),
     vRepeat:{},
+    vocabSrs:{},
   };
 }
-function saveState(){ try{ localStorage.setItem('dl5',JSON.stringify(S)); }catch(e){} }
+
+function migrateState(raw) {
+  const next = { ...createDefaultState(), ...raw };
+  next.stateVersion = STATE_VERSION;
+  next.lvlXP = { ...createDefaultState().lvlXP, ...(raw.lvlXP||{}) };
+  next.goals = Array.isArray(raw.goals) ? raw.goals.slice(0, 3) : [false, false, false];
+  while(next.goals.length < 3) next.goals.push(false);
+  if(!Array.isArray(next.weekXP) || next.weekXP.length !== 7){
+    next.weekXP = [0,0,0,0,0,0,0];
+  }
+  if(!next.gramProgress || typeof next.gramProgress !== 'object') next.gramProgress = {};
+  if(!next.exams || typeof next.exams !== 'object') next.exams = {};
+  if(!next.vRepeat || typeof next.vRepeat !== 'object') next.vRepeat = {};
+  if(!next.vocabSrs || typeof next.vocabSrs !== 'object') next.vocabSrs = {};
+  if(!Array.isArray(next.badges)) next.badges = [];
+  if(!Array.isArray(next.unlocked) || !next.unlocked.length) next.unlocked = ['a1'];
+  return next;
+}
+
+function loadState() {
+  try {
+    const s = localStorage.getItem(STATE_KEY);
+    if (!s) return createDefaultState();
+    const parsed = JSON.parse(s);
+    return migrateState(parsed);
+  } catch(err) {
+    logWarn('loadState', err);
+    return createDefaultState();
+  }
+}
+
+function saveState(){
+  try{
+    localStorage.setItem(STATE_KEY,JSON.stringify(S));
+  }catch(err){
+    logWarn('saveState', err);
+  }
+}
 const S = loadState();
 
 function getMonday(){
@@ -32,7 +87,7 @@ function getMonday(){
 //  BOOT
 // ══════════════════════════════════════════════════════════════
 document.addEventListener('DOMContentLoaded', ()=>{
-  if('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js').catch(()=>{});
+  const swRegistration = registerServiceWorker();
   checkDayReset();
   renderHome();
   buildGramTopics();
@@ -40,21 +95,36 @@ document.addEventListener('DOMContentLoaded', ()=>{
   buildSpeaking();
   loadVocab();
   syncTopBar();
-  setupSWUpdate();
+  setupSWUpdate(swRegistration);
+  initAccessibility();
 });
 
-function setupSWUpdate(){
-  if(!('serviceWorker' in navigator)) return;
-  navigator.serviceWorker.register('/sw.js').then(reg=>{
+function registerServiceWorker(){
+  if(!('serviceWorker' in navigator)) return Promise.resolve(null);
+  return navigator.serviceWorker.register('/sw.js').catch(err=>{
+    logWarn('serviceWorker.register', err);
+    return null;
+  });
+}
+
+function setupSWUpdate(registrationPromise){
+  if(!('serviceWorker' in navigator) || !registrationPromise) return;
+  registrationPromise.then(reg=>{
+    if(!reg) return;
     if(reg.waiting) showUpdateBtn();
     reg.addEventListener('updatefound',()=>{
       const w=reg.installing;
+      if(!w) return;
       w.addEventListener('statechange',()=>{
         if(w.state==='installed'&&navigator.serviceWorker.controller){ showUpdateBtn(); showToast('🔄 Actualización disponible'); }
       });
     });
-  }).catch(()=>{});
-  setInterval(()=>{ navigator.serviceWorker.getRegistration().then(r=>r&&r.update()); }, 600000);
+  }).catch(err=>logWarn('setupSWUpdate', err));
+  setInterval(()=>{
+    navigator.serviceWorker.getRegistration()
+      .then(r=>r&&r.update())
+      .catch(err=>logWarn('serviceWorker.update', err));
+  }, 600000);
 }
 function showUpdateBtn(){ const b=document.getElementById('updateBtn'); if(b) b.style.display='block'; }
 function updateApp(){
@@ -85,10 +155,24 @@ function checkDayReset(){
 //  NAVIGATION
 // ══════════════════════════════════════════════════════════════
 function nav(id,btn){
-  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
-  document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
-  document.getElementById('p-'+id).classList.add('active');
-  if(btn) btn.classList.add('active');
+  document.querySelectorAll('.panel').forEach(p=>{
+    p.classList.remove('active');
+    p.setAttribute('role','tabpanel');
+    p.setAttribute('aria-hidden','true');
+  });
+  document.querySelectorAll('.nav-btn').forEach(b=>{
+    b.classList.remove('active');
+    b.setAttribute('aria-selected','false');
+  });
+  const panel=document.getElementById('p-'+id);
+  if(panel){
+    panel.classList.add('active');
+    panel.setAttribute('aria-hidden','false');
+  }
+  if(btn){
+    btn.classList.add('active');
+    btn.setAttribute('aria-selected','true');
+  }
   document.getElementById('content').scrollTop=0;
 }
 
@@ -216,12 +300,15 @@ function renderStatsDetail(){
   const maxCombo = S.maxCombo||0;
 
   // Exam results
-  const examResults = Object.entries(S.exams||{}).map(([k,v])=>
-    `<span class="sd-exam-chip ${v.passed?'pass':'fail'}">${k.toUpperCase()} ${v.passed?'✓':'✗'} ${v.score}%</span>`
-  ).join('');
+  const examResults = Object.entries(S.exams||{}).map(([k,v])=>{
+    const score = Number.isFinite(v.score) ? v.score : 0;
+    return `<span class="sd-exam-chip ${v.passed?'pass':'fail'}">${escapeHTML(k.toUpperCase())} ${v.passed?'✓':'✗'} ${escapeHTML(score)}%</span>`;
+  }).join('');
 
   const gramName = k => ({artikel:'Artículos',verbkonj:'Conjugación',perfekt:'Pasado',negation:'Negación',kasus:'Casos',praepositionen:'Preposiciones',trennbar:'Separables',adjektive:'Adjetivos',modal:'Modales',satzbau:'Orden'}[k]||k);
 
+  const topGramName = topGram ? escapeHTML(gramName(topGram[0])) : '';
+  const weakGramName = (weakGram && weakGram!==topGram) ? escapeHTML(gramName(weakGram[0])) : '';
   el.innerHTML=`
     <div class="sd-grid">
       <div class="sd-item">
@@ -249,8 +336,8 @@ function renderStatsDetail(){
         <div class="sd-lbl">XP total</div>
       </div>
     </div>
-    ${topGram ? `<div class="sd-row"><span class="sd-tag green">💪 Mejor tema: ${gramName(topGram[0])}</span></div>` : ''}
-    ${weakGram && weakGram!==topGram ? `<div class="sd-row"><span class="sd-tag orange">📌 A mejorar: ${gramName(weakGram[0])}</span></div>` : ''}
+    ${topGram ? `<div class="sd-row"><span class="sd-tag green">💪 Mejor tema: ${topGramName}</span></div>` : ''}
+    ${weakGram && weakGram!==topGram ? `<div class="sd-row"><span class="sd-tag orange">📌 A mejorar: ${weakGramName}</span></div>` : ''}
     ${examResults ? `<div class="sd-row" style="flex-wrap:wrap;gap:5px;">${examResults}</div>` : ''}
     ${reviewWords>0 ? `<div class="sd-row"><button class="sd-review-btn" onclick="startReviewMode()">🔄 Repasar ${reviewWords} palabras difíciles</button></div>` : ''}
   `;
@@ -367,6 +454,32 @@ let vQueue=[], vIdx=0, vFlipped=false;
 let vMode='cards', vDir='de', vLevel='a1', vCat='all';
 // vRepeat now persisted in S.vRepeat
 
+function ensureSrsEntry(wordKey){
+  if(!S.vocabSrs[wordKey]){
+    S.vocabSrs[wordKey] = { ease: 2.3, interval: 0, nextReview: 0 };
+  }
+  return S.vocabSrs[wordKey];
+}
+
+function isSrsDue(wordKey, now = Date.now()){
+  const item = ensureSrsEntry(wordKey);
+  return !item.nextReview || item.nextReview <= now;
+}
+
+function updateWordSrs(wordKey, ok){
+  const item = ensureSrsEntry(wordKey);
+  if(ok){
+    item.ease = Math.min(2.8, item.ease + 0.15);
+    item.interval = item.interval <= 0 ? 1 : Math.max(1, Math.round(item.interval * item.ease));
+    item.nextReview = Date.now() + (item.interval * DAY_MS);
+  } else {
+    item.ease = Math.max(1.3, item.ease - 0.2);
+    item.interval = 1;
+    // Failed cards return quickly, but not immediately.
+    item.nextReview = Date.now() + (10 * 60 * 1000);
+  }
+}
+
 function getVocabSource(){
   let src = vLevel==='a1'?VOCAB : vLevel==='a2'?VOCAB_A2 : vLevel==='b1'?VOCAB_B1 : VOCAB_B2;
   return vCat==='all' ? Object.values(src).flat() : (src[vCat]||[]);
@@ -374,7 +487,15 @@ function getVocabSource(){
 
 function buildVQueue(){
   const base=getVocabSource(); vQueue=[];
-  base.forEach(w=>{ const r=S.vRepeat[w.de]||0; for(let i=0;i<(r>0?3:1);i++) vQueue.push(w); });
+  const now = Date.now();
+  base.forEach(w=>{
+    const repeatPenalty = S.vRepeat[w.de]||0;
+    const due = isSrsDue(w.de, now);
+    let weight = due ? 3 : 1;
+    if(repeatPenalty>0) weight += 2;
+    if(due && repeatPenalty>0) weight += 2;
+    for(let i=0;i<weight;i++) vQueue.push(w);
+  });
   shuffle(vQueue); vIdx=0;
 }
 
@@ -388,7 +509,7 @@ function startReviewMode(){
   [VOCAB, VOCAB_A2, VOCAB_B1, VOCAB_B2].forEach(src=>{
     if(!src) return;
     Object.values(src).flat().forEach(w=>{
-      if((S.vRepeat[w.de]||0)>0) wrongWords.push(w);
+      if((S.vRepeat[w.de]||0)>0 || isSrsDue(w.de)) wrongWords.push(w);
     });
   });
   if(wrongWords.length===0){
@@ -503,13 +624,28 @@ function initFlipScene(){
 
 function markV(ok, e){
   if(e) e.stopPropagation(); // prevent tap bubbling to flip-scene on Android
-  const w=vQueue[vIdx%vQueue.length]; S.vTot++;
-  if(ok){ S.vOk++; S.vRepeat[w.de]=Math.max(0,(S.vRepeat[w.de]||0)-1); increaseCombo(); addXP(5,'vocabulario'); completeGoal(0); }
-  else  { S.vNo++; S.vRepeat[w.de]=(S.vRepeat[w.de]||0)+1; resetCombo(); }
+  const w=vQueue[vIdx%vQueue.length];
+  applyVocabAnswer({ok, word:w, xpOnCorrect:5});
   updateVocabScores(); updateStats(); checkVocabBadges();
   if(S.vTot>0&&S.vTot%15===0) showModal('🎉','¡Ronda completada!','Tarjetas: '+S.vTot+'. Correctas: '+S.vOk+'.');
   vIdx++; if(vIdx>=vQueue.length) buildVQueue();
   showVCard(); saveState();
+}
+
+function applyVocabAnswer({ ok, word, xpOnCorrect }){
+  S.vTot++;
+  updateWordSrs(word.de, ok);
+  if(ok){
+    S.vOk++;
+    S.vRepeat[word.de]=Math.max(0,(S.vRepeat[word.de]||0)-1);
+    increaseCombo();
+    addXP(xpOnCorrect,'vocabulario');
+    completeGoal(0);
+  } else {
+    S.vNo++;
+    S.vRepeat[word.de]=(S.vRepeat[word.de]||0)+1;
+    resetCombo();
+  }
 }
 
 // ── CHOICE ───────────────────────────────────────────────────
@@ -532,8 +668,7 @@ function checkChoice(chosen,correct,word,btn){
   const ok=chosen===correct; if(!ok) btn.classList.add('wrong');
   const expl=document.getElementById('choiceExpl');
   expl.textContent=ok?'✓ ¡Correcto!':'✗ Era: "'+correct+'"'; expl.className='gram-expl '+(ok?'ok':'err');
-  S.vTot++; if(ok){ S.vOk++; S.vRepeat[word.de]=Math.max(0,(S.vRepeat[word.de]||0)-1); increaseCombo(); addXP(5,'vocabulario'); completeGoal(0); }
-  else{ S.vNo++; S.vRepeat[word.de]=(S.vRepeat[word.de]||0)+1; resetCombo(); }
+  applyVocabAnswer({ok, word, xpOnCorrect:5});
   updateVocabScores(); updateStats(); checkVocabBadges();
   setTimeout(()=>{ vIdx++; if(vIdx>=vQueue.length) buildVQueue(); showChoiceCard(); saveState(); },1200);
 }
@@ -558,8 +693,8 @@ function checkType(){
   const ok=norm(typed)===norm(correct)||levenshtein(norm(typed),norm(correct))<=1;
   const expl=document.getElementById('typeExpl');
   expl.textContent=ok?'✓ ¡Correcto! "'+correct+'"':'✗ Respuesta correcta: "'+correct+'"'; expl.className='gram-expl '+(ok?'ok':'err');
-  S.vTot++; if(ok){ S.vOk++; S.vRepeat[w.de]=Math.max(0,(S.vRepeat[w.de]||0)-1); increaseCombo(); addXP(8,'vocabulario'); completeGoal(0); if(vDir==='de') speakGerman(w.de,w.audioId); }
-  else{ S.vNo++; S.vRepeat[w.de]=(S.vRepeat[w.de]||0)+1; resetCombo(); }
+  applyVocabAnswer({ok, word:w, xpOnCorrect:8});
+  if(ok && vDir==='de') speakGerman(w.de,w.audioId);
   updateVocabScores(); updateStats(); checkVocabBadges();
   document.getElementById('typeNext').style.display='block'; saveState();
 }
@@ -1073,7 +1208,7 @@ function startRecognition(targetText, audioId, btnEl, statusEl, onDone){
   if(activeRecognition){ try{ activeRecognition.stop(); }catch(e){} activeRecognition=null; }
 
   if(!srSupported){
-    if(statusEl) statusEl.innerHTML='⚠️ Tu navegador no soporta reconocimiento de voz.<br><small>Usa Chrome en Android para esta función.</small>';
+    if(statusEl) statusEl.textContent='⚠️ Tu navegador no soporta reconocimiento de voz. Usa Chrome en Android para esta función.';
     return;
   }
 
@@ -1085,7 +1220,7 @@ function startRecognition(targetText, audioId, btnEl, statusEl, onDone){
   activeRecognition=sr;
 
   if(btnEl){ btnEl.textContent='⏹ Detener'; btnEl.classList.add('rec'); }
-  if(statusEl) statusEl.innerHTML='🔴 <strong>Escuchando…</strong> Habla ahora en alemán';
+  if(statusEl) statusEl.textContent='🔴 Escuchando… Habla ahora en alemán';
 
   sr.onresult=function(e){
     let best='', bestConf=0;
@@ -1105,7 +1240,7 @@ function startRecognition(targetText, audioId, btnEl, statusEl, onDone){
       if(onDone) onDone(best);
     } else {
       // Show interim
-      if(statusEl) statusEl.innerHTML='🎙️ <em>'+best+'</em>';
+      if(statusEl) statusEl.textContent='🎙️ ' + best;
     }
   };
 
@@ -1118,12 +1253,12 @@ function startRecognition(targetText, audioId, btnEl, statusEl, onDone){
       'network':'Error de red. Comprueba la conexión.',
       'audio-capture':'No se encontró micrófono.',
     };
-    if(statusEl) statusEl.innerHTML='⚠️ '+(msgs[e.error]||'Error: '+e.error);
+    if(statusEl) statusEl.textContent='⚠️ ' + (msgs[e.error]||('Error: '+e.error));
   };
 
   sr.onend=function(){
     if(activeRecognition===sr) activeRecognition=null;
-    if(btnEl && btnEl.classList.contains('rec')){ btnEl.textContent='🎤 Reintentar'; btnEl.classList.remove('rec'); if(statusEl && !statusEl.querySelector('.pron-result')) statusEl.innerHTML='⚠️ No se detectó voz. Inténtalo de nuevo.'; }
+    if(btnEl && btnEl.classList.contains('rec')){ btnEl.textContent='🎤 Reintentar'; btnEl.classList.remove('rec'); if(statusEl && !statusEl.querySelector('.pron-result')) statusEl.textContent='⚠️ No se detectó voz. Inténtalo de nuevo.'; }
   };
 
   sr.start();
@@ -1153,7 +1288,7 @@ function showPronFeedback(heard, target, statusEl){
 
   // Match each target word to best heard word
   let correct=0, html='<div class="pron-result">';
-  html+='<div class="pron-heard">🎙️ Escuchado: <em>'+heard+'</em></div>';
+  html+='<div class="pron-heard">🎙️ Escuchado: <em>'+escapeHTML(heard)+'</em></div>';
   html+='<div class="pron-words">';
 
   targetWords.forEach(tw=>{
@@ -1164,7 +1299,7 @@ function showPronFeedback(heard, target, statusEl){
     const maxDist=Math.max(1,Math.floor(tn.length*0.35));
     const ok=bestDist<=maxDist;
     if(ok) correct++;
-    html+='<span class="pw '+(ok?'pw-ok':'pw-err')+'">'+tw+'</span> ';
+    html+='<span class="pw '+(ok?'pw-ok':'pw-err')+'">'+escapeHTML(tw)+'</span> ';
   });
 
   html+='</div>';
@@ -1504,8 +1639,10 @@ function showCertificate(levelId){
     b2: { bg:'#F5EEFF', border:'#9B72CF', dark:'#8E44AD', medal:'🏆' },
   };
   const c = colors[levelId] || colors.a1;
-  const date = exam.date || new Date().toLocaleDateString('es-ES');
-  const score = exam.score;
+  const date = escapeHTML(exam.date || new Date().toLocaleDateString('es-ES'));
+  const score = Number.isFinite(exam.score) ? exam.score : 0;
+  const levelName = escapeHTML(lv.name);
+  const levelDesc = escapeHTML(lv.desc);
 
   // Stars based on score
   const stars = score===100?'★★★★★':score>=90?'★★★★☆':score>=80?'★★★☆☆':'★★☆☆☆';
@@ -1529,10 +1666,10 @@ function showCertificate(levelId){
         <div class="cert-text">Ha superado con éxito el examen oficial de nivel</div>
 
         <div class="cert-level-badge" style="background:${c.dark};">
-          ${lv.label} — ${lv.name}
+          ${escapeHTML(lv.label)} — ${levelName}
         </div>
 
-        <div class="cert-desc">${lv.desc}</div>
+        <div class="cert-desc">${levelDesc}</div>
 
         <!-- Score -->
         <div class="cert-score-row">
@@ -1559,7 +1696,7 @@ function showCertificate(levelId){
           <div class="cert-seal" style="border-color:${c.border};color:${c.dark};">
             <div class="cert-seal-inner">
               <div>✓</div>
-              <div style="font-size:0.45rem;font-weight:800;margin-top:2px;">${lv.label}</div>
+              <div style="font-size:0.45rem;font-weight:800;margin-top:2px;">${escapeHTML(lv.label)}</div>
               <div style="font-size:0.4rem;">APROBADO</div>
             </div>
           </div>
@@ -1574,6 +1711,17 @@ function showCertificate(levelId){
 
 function closeCert(){
   document.getElementById('certOverlay').classList.remove('show');
+}
+
+function initAccessibility(){
+  const toast=document.getElementById('toast');
+  if(toast){
+    toast.setAttribute('role','status');
+    toast.setAttribute('aria-live','polite');
+    toast.setAttribute('aria-atomic','true');
+  }
+  const content=document.getElementById('content');
+  if(content) content.setAttribute('tabindex','-1');
 }
 
 function confirmReset(){
@@ -1593,7 +1741,11 @@ function confirmReset(){
 }
 
 function doReset(){
-  try{ localStorage.removeItem('dl5'); }catch(e){}
+  try{
+    localStorage.removeItem(STATE_KEY);
+  }catch(err){
+    logWarn('doReset', err);
+  }
   closeModal();
   // Small delay so user sees the modal close
   setTimeout(()=>{ window.location.reload(); }, 300);
@@ -1617,3 +1769,23 @@ function confetti(){
 }
 
 function shuffle(a){ for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; } }
+
+function runCoreSelfTests(){
+  const dist = levenshtein('haus', 'maus');
+  console.assert(dist === 1, 'levenshtein should return 1');
+
+  const escaped = escapeHTML('<b>x</b>');
+  console.assert(escaped === '&lt;b&gt;x&lt;/b&gt;', 'escapeHTML should escape tags');
+
+  const probe = '__selftest_word__';
+  S.vocabSrs[probe] = { ease: 2.3, interval: 1, nextReview: Date.now() - 1000 };
+  updateWordSrs(probe, true);
+  console.assert(S.vocabSrs[probe].interval >= 2, 'SRS interval should grow after correct answer');
+  updateWordSrs(probe, false);
+  console.assert(S.vocabSrs[probe].interval === 1, 'SRS interval should reset after wrong answer');
+  delete S.vocabSrs[probe];
+
+  return true;
+}
+
+window.runCoreSelfTests = runCoreSelfTests;

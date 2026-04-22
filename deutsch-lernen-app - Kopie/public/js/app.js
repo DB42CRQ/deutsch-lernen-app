@@ -431,9 +431,9 @@ function setVocabLevel(level,btn){
   vLevel=level; vCat='all';
   document.querySelectorAll('.lvl-btn').forEach(b=>b.classList.remove('active')); btn.classList.add('active');
   const catLabels={
-    a1:{all:'🌟 Todo',saludos:'👋 Saludos',numeros:'🔢 Números',familia:'👪 Familia',comida:'🍎 Comida',tiempo:'⏰ Tiempo',verbos:'⚡ Verbos',adjektivos:'🎨 Adjetivos',colores:'🌈 Colores',casa:'🏠 Casa',kleidung:'👗 Ropa',schule:'🏫 Escuela',tiere:'🐾 Animales',natur:'🌿 Naturaleza'},
-    a2:{all:'🌟 Todo',ciudad:'🏙️ Ciudad',reisen:'✈️ Viajes',einkaufen:'🛍️ Compras',cuerpo:'🫀 Cuerpo',pasado:'⏳ Pasado',salud:'🏥 Salud',wetter:'🌤️ Tiempo',freizeit:'🎯 Ocio',wohnen:'🏠 Vivienda',kommunikation:'💬 Comunicación'},
-    b1:{all:'🌟 Todo',trabajo:'💼 Trabajo',opiniones:'💬 Opiniones',medios:'📺 Medios',gesellschaft:'🌍 Sociedad',kultur:'🎭 Cultura',bildung:'📚 Educación',wissenschaft:'🔬 Ciencia',wirtschaft:'📈 Economía',gesundheit:'💊 Salud'},
+    a1:{all:'🌟 Todo',saludos:'👋 Saludos',numeros:'🔢 Números',familia:'👪 Familia',comida:'🍎 Comida',tiempo:'⏰ Tiempo',verbos:'⚡ Verbos',adjektivos:'🎨 Adjetivos',colores:'🌈 Colores',casa:'🏠 Casa',kleidung:'👗 Ropa',schule:'🏫 Escuela',tiere:'🐾 Animales',natur:'🌿 Naturaleza',koerperpflege:'🪥 Higiene'},
+    a2:{all:'🌟 Todo',ciudad:'🏙️ Ciudad',reisen:'✈️ Viajes',einkaufen:'🛍️ Compras',cuerpo:'🫀 Cuerpo',pasado:'⏳ Pasado',salud:'🏥 Salud',wetter:'🌤️ Tiempo',freizeit:'🎯 Ocio',wohnen:'🏠 Vivienda',kommunikation:'💬 Comunicación',gefuehle:'❤️ Sentimientos'},
+    b1:{all:'🌟 Todo',trabajo:'💼 Trabajo',opiniones:'💬 Opiniones',medios:'📺 Medios',gesellschaft:'🌍 Sociedad',kultur:'🎭 Cultura',bildung:'📚 Educación',wissenschaft:'🔬 Ciencia',wirtschaft:'📈 Economía',gesundheit:'💊 Salud',recht:'⚖️ Derecho'},
     b2:{all:'🌟 Todo',sprache:'🗣️ Lengua',politik:'🏛️ Política',psychologie:'🧠 Psicología',wirtschaft_b2:'💹 Economía B2'},
   };
   const labels=catLabels[level]||catLabels.a1;
@@ -871,11 +871,44 @@ function playAudio(i){
   });
   audio.addEventListener('error',()=>{
     clearInterval(progressInterval); progressInterval=null;
-    btn.textContent='▶'; time.textContent='⚠️ Sin audio (genera MP3 primero)';
     currentAudio=null; currentAudioBtn=null;
+    // Fallback: TTS mit dem Dialog-Text
+    const item=LISTENING[i];
+    if(item && item.text && window.speechSynthesis){
+      btn.textContent='🔊'; time.textContent='▶ TTS…';
+      window.speechSynthesis.cancel();
+      const u=new SpeechSynthesisUtterance(item.text);
+      u.lang='de-DE'; u.rate=getSpeed(i)*0.75;
+      const vx=window.speechSynthesis.getVoices().find(v=>v.lang==='de-DE')||
+               window.speechSynthesis.getVoices().find(v=>v.lang.startsWith('de'));
+      if(vx) u.voice=vx;
+      u.onstart=()=>{ time.textContent='🔊 Escuchando…'; };
+      u.onend=()=>{ btn.textContent='▶'; time.textContent='✓ Fin (TTS)'; };
+      window.speechSynthesis.speak(u);
+    } else {
+      btn.textContent='▶'; time.textContent='⚠️ Sin audio — ejecuta generate_audio.py';
+    }
   });
   audio.playbackRate=getSpeed(i);
-  audio.play().catch(()=>{ btn.textContent='▶'; time.textContent='⚠️ Sin audio'; });
+  audio.play().catch(()=>{
+    // play() rejected before error event — trigger TTS directly
+    clearInterval(progressInterval); progressInterval=null;
+    currentAudio=null; currentAudioBtn=null;
+    const item=LISTENING[i];
+    if(item && item.text && window.speechSynthesis){
+      btn.textContent='🔊'; time.textContent='▶ TTS…';
+      window.speechSynthesis.cancel();
+      const u=new SpeechSynthesisUtterance(item.text);
+      u.lang='de-DE'; u.rate=getSpeed(i)*0.75;
+      const vv=window.speechSynthesis.getVoices().find(v=>v.lang==='de-DE')||
+               window.speechSynthesis.getVoices().find(v=>v.lang.startsWith('de'));
+      if(vv) u.voice=vv;
+      u.onend=()=>{ btn.textContent='▶'; time.textContent='✓ Fin (TTS)'; };
+      window.speechSynthesis.speak(u);
+    } else {
+      btn.textContent='▶'; time.textContent='⚠️ Sin audio';
+    }
+  });
 }
 
 const cardSpeeds={};

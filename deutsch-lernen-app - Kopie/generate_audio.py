@@ -8,7 +8,7 @@ Generiert MP3s für:
 
 Stimmen: Lara (weiblich) + Matthias (maennlich)
 Benoetigt: pip install pydub  +  ffmpeg im PATH
-API-Key: Umgebungsvariable MURF_API_KEY
+API-Key: murf_key.txt (im selben Ordner)
 """
 import urllib.request, json, os, time, shutil
 
@@ -193,14 +193,11 @@ PHONETICS = [
 
 
 def load_key():
-    key = os.getenv("MURF_API_KEY", "").strip()
-    if key:
-        return key
-    print("FEHLER: MURF_API_KEY fehlt!")
-    print("Setze den Key z.B. in PowerShell mit:")
-    print("  $env:MURF_API_KEY = 'dein_api_key'")
-    input("Enter...")
-    exit(1)
+    kf = os.path.join(os.path.dirname(__file__), "murf_key.txt")
+    if not os.path.exists(kf):
+        print("FEHLER: murf_key.txt fehlt!"); input("Enter..."); exit(1)
+    with open(kf) as f:
+        return f.read().strip()
 
 
 def gen_mp3(api_key, text, voice, dest):

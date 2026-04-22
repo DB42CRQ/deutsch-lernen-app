@@ -27,7 +27,7 @@
   <div class="top-pills">
     <div class="pill pill-streak">🔥 <span id="tb-streak">1</span></div>
     <div class="pill pill-xp">⭐ <span id="tb-xp">0</span></div>
-    <button class="update-btn" id="updateBtn" onclick="updateApp()" title="Actualizar app" aria-label="Actualizar aplicación" style="display:none;">🔄</button>
+    <button class="update-btn" id="updateBtn" onclick="updateApp()" title="Actualizar app" style="display:none;">🔄</button>
   </div>
 </header>
 
@@ -35,7 +35,7 @@
 <canvas id="confetti"></canvas>
 
 <!-- ── XP TOAST ── -->
-<div class="toast" id="toast" role="status" aria-live="polite" aria-atomic="true">+5 XP</div>
+<div class="toast" id="toast">+5 XP</div>
 
 <!-- ── SCROLLABLE CONTENT ── -->
 <main class="content" id="content">
@@ -458,20 +458,20 @@
 </main>
 
 <!-- ── BOTTOM NAV ── -->
-<nav class="bottomnav" role="tablist" aria-label="Navegación principal">
-  <button class="nav-btn active" role="tab" aria-selected="true" aria-controls="p-home" onclick="nav('home',this)">
+<nav class="bottomnav">
+  <button class="nav-btn active" onclick="nav('home',this)">
     <span class="ni">🏠</span><span>Inicio</span><span class="nd"></span>
   </button>
-  <button class="nav-btn" role="tab" aria-selected="false" aria-controls="p-vocab" onclick="nav('vocab',this)">
+  <button class="nav-btn" onclick="nav('vocab',this)">
     <span class="ni">📚</span><span>Palabras</span><span class="nd"></span>
   </button>
-  <button class="nav-btn" role="tab" aria-selected="false" aria-controls="p-grammar" onclick="nav('grammar',this)">
+  <button class="nav-btn" onclick="nav('grammar',this)">
     <span class="ni">✏️</span><span>Gramática</span><span class="nd"></span>
   </button>
-  <button class="nav-btn" role="tab" aria-selected="false" aria-controls="p-listen" onclick="nav('listen',this)">
+  <button class="nav-btn" onclick="nav('listen',this)">
     <span class="ni">🎧</span><span>Escucha</span><span class="nd"></span>
   </button>
-  <button class="nav-btn" role="tab" aria-selected="false" aria-controls="p-speak" onclick="nav('speak',this)">
+  <button class="nav-btn" onclick="nav('speak',this)">
     <span class="ni">🗣️</span><span>Habla</span><span class="nd"></span>
   </button>
 </nav>
