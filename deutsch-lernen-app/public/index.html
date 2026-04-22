@@ -410,7 +410,7 @@
       <div class="speak-daily-es" id="dailySpeakES">¡Aprendo alemán!</div>
       <div class="speak-daily-actions">
         <button class="speak-daily-btn" onclick="playSentenceOfDay()">🔊 Escuchar</button>
-        <button class="speak-daily-btn active" onclick="toggleDailyMic()">🎤 <span id="dailyMicLabel">Practicar</span></button>
+        <button class="speak-daily-btn active" id="dailyMicBtn" onclick="toggleDailyMic()">🎤 <span id="dailyMicLabel">Practicar</span></button>
       </div>
       <div class="speak-daily-status" id="dailyStatus"></div>
     </div>
@@ -419,6 +419,10 @@
     <div class="speak-stats-row">
       <div class="speak-stat"><span id="sp-practiced">0</span><div>practicadas hoy</div></div>
       <div class="speak-stat"><span id="sp-total">0</span><div>total sesión</div></div>
+    </div>
+    <div class="section" style="margin:10px 16px 2px;">
+      <div class="section-title">🎯 Hoy mejorar</div>
+      <div id="speakWeakPanel"></div>
     </div>
 
     <!-- LEVEL FILTER -->
@@ -434,6 +438,9 @@
       <button class="mode-btn active" id="speakModeNormal"   onclick="setSpeakMode('normal',this)">🎤 Practicar</button>
       <button class="mode-btn"        id="speakModeShadow"   onclick="setSpeakMode('shadow',this)">👥 Shadowing</button>
       <button class="mode-btn"        id="speakModePhonetic" onclick="setSpeakMode('phonetic',this)">🔤 Fonética</button>
+    </div>
+    <div style="padding:8px 16px 0;">
+      <button class="mode-btn" id="speakWeakOnlyBtn" onclick="toggleSpeakWeakOnly(this)">🎯 Solo no dominadas</button>
     </div>
 
     <!-- SPEAK CARDS (normal + shadow mode) -->

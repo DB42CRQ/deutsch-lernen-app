@@ -2,7 +2,7 @@
 //  STATE
 // ══════════════════════════════════════════════════════════════
 const STATE_KEY = 'dl5';
-const STATE_VERSION = 3;
+const STATE_VERSION = 4;
 const DAY_MS = 24 * 60 * 60 * 1000;
 
 function logWarn(scope, err){
@@ -36,6 +36,13 @@ function createDefaultState() {
     lastDay:new Date().toDateString(),
     vRepeat:{},
     vocabSrs:{},
+    speak:{
+      day:new Date().toDateString(),
+      practicedToday:0,
+      totalAllTime:0,
+      bestPct:0,
+      phraseStats:{},
+    },
   };
 }
 
@@ -52,6 +59,12 @@ function migrateState(raw) {
   if(!next.exams || typeof next.exams !== 'object') next.exams = {};
   if(!next.vRepeat || typeof next.vRepeat !== 'object') next.vRepeat = {};
   if(!next.vocabSrs || typeof next.vocabSrs !== 'object') next.vocabSrs = {};
+  if(!next.speak || typeof next.speak !== 'object') next.speak = createDefaultState().speak;
+  if(!next.speak.day) next.speak.day = new Date().toDateString();
+  if(!Number.isFinite(next.speak.practicedToday)) next.speak.practicedToday = 0;
+  if(!Number.isFinite(next.speak.totalAllTime)) next.speak.totalAllTime = 0;
+  if(!Number.isFinite(next.speak.bestPct)) next.speak.bestPct = 0;
+  if(!next.speak.phraseStats || typeof next.speak.phraseStats !== 'object') next.speak.phraseStats = {};
   if(!Array.isArray(next.badges)) next.badges = [];
   if(!Array.isArray(next.unlocked) || !next.unlocked.length) next.unlocked = ['a1'];
   return next;
@@ -148,6 +161,8 @@ function checkDayReset(){
   S.goals=[false,false,false];
   S.combo=0;
   S.lastDay=today;
+  S.speak.day=today;
+  S.speak.practicedToday=0;
   saveState();
 }
 
@@ -1127,8 +1142,124 @@ function updateListenScoreRow(){
 const micTimers={};
 const shadowData={}; // stores {text,audioId} per phrase index
 let speakMode='normal', speakLevelFilter='all';
-let spPracticedToday=0, spTotalSession=0;
 let shadowStep={};
+let speakWeakOnly=false;
+
+function recordSpeakAttempt(phraseKey, pct){
+  const stats = S.speak.phraseStats[phraseKey] || { attempts:0, bestPct:0, lastPct:0, lastAt:0, goodStreak:0, mastered:false };
+  stats.attempts += 1;
+  stats.lastPct = pct;
+  stats.bestPct = Math.max(stats.bestPct||0, pct);
+  stats.lastAt = Date.now();
+  if(pct>=85) stats.goodStreak = (stats.goodStreak||0) + 1;
+  else stats.goodStreak = 0;
+  // "Mastered" after 3 strong attempts in a row.
+  stats.mastered = stats.goodStreak >= 3;
+  S.speak.phraseStats[phraseKey] = stats;
+  S.speak.practicedToday += 1;
+  S.speak.totalAllTime += 1;
+  S.speak.bestPct = Math.max(S.speak.bestPct||0, pct);
+}
+
+function getPhraseWeakScore(idx){
+  const normal = S.speak.phraseStats['speak:'+idx] || { attempts:0, bestPct:0, lastAt:0, mastered:false };
+  const shadow = S.speak.phraseStats['shadow:'+idx] || { attempts:0, bestPct:0, lastAt:0, mastered:false };
+  const attempts = (normal.attempts||0) + (shadow.attempts||0);
+  const bestPct = Math.max(normal.bestPct||0, shadow.bestPct||0);
+  const lastAt = Math.max(normal.lastAt||0, shadow.lastAt||0);
+  const daysSince = lastAt ? Math.floor((Date.now() - lastAt)/DAY_MS) : 999;
+  const mastered = !!normal.mastered && !!shadow.mastered;
+  let score = 100 - bestPct;
+  if(attempts === 0) score += 30;
+  else if(attempts < 3) score += 15;
+  if(daysSince > 2) score += 8;
+  // Keep mastered phrases mostly out of weak queues.
+  if(mastered) score -= 40;
+  // After a week, mastered phrases get gentle resurfacing.
+  if(mastered && daysSince > 7) score += 12;
+  return { attempts, bestPct, score, mastered };
+}
+
+function getAdaptiveSpeakPhrases(){
+  const levelOrder = { A1:0, A2:1, B1:2 };
+  const filtered = speakLevelFilter==='all' ? [...SPEAKING] : SPEAKING.filter(p=>p.level===speakLevelFilter);
+  const mapped = filtered.map(p=>{
+    const idx = SPEAKING.indexOf(p);
+    return { p, idx, weak: getPhraseWeakScore(idx) };
+  });
+  const visible = speakWeakOnly ? mapped.filter(x=>!x.weak.mastered) : mapped;
+  return visible.sort((a,b)=>{
+    const ai = a.idx;
+    const bi = b.idx;
+    const aw = a.weak;
+    const bw = b.weak;
+    if(speakLevelFilter==='all'){
+      const lo = (levelOrder[a.p.level]||9) - (levelOrder[b.p.level]||9);
+      if(lo!==0) return lo;
+    }
+    if(bw.score !== aw.score) return bw.score - aw.score;
+    return ai - bi;
+  }).map(x=>x.p);
+}
+
+function renderSpeakWeakPanel(){
+  const panel = document.getElementById('speakWeakPanel');
+  if(!panel) return;
+  const top = SPEAKING.map((p, idx)=>({ p, idx, ...getPhraseWeakScore(idx) }))
+    .filter(item=>!item.mastered)
+    .sort((a,b)=>b.score-a.score)
+    .slice(0,5);
+  const masteredCount = SPEAKING
+    .map((_, idx)=>getPhraseWeakScore(idx))
+    .filter(item=>item.mastered).length;
+  if(!top.length){
+    panel.innerHTML = '<div class="stats-detail-card">¡Buen trabajo! No hay frases débiles ahora. ✅<div class="sd-row" style="margin-top:8px;"><span class="sd-tag green">Dominadas: '+masteredCount+'</span></div></div>';
+    return;
+  }
+  panel.innerHTML = '<div class="stats-detail-card">'+top.map(item=>{
+    const label = item.attempts>0 ? ('mejor '+item.bestPct+'%') : 'sin intentos';
+    return '<div class="sd-row" style="justify-content:space-between;gap:8px;">'+
+      '<span class="sd-tag orange" style="max-width:72%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">'+escapeHTML(item.p.de)+'</span>'+
+      '<button class="sd-review-btn" style="padding:6px 10px;" onclick="jumpToSpeakPhrase('+item.idx+')">'+escapeHTML(label)+'</button>'+
+    '</div>';
+  }).join('')+'<div class="sd-row" style="margin-top:8px;"><span class="sd-tag green">Dominadas: '+masteredCount+'</span></div></div>';
+}
+
+function jumpToSpeakPhrase(idx){
+  if(speakMode==='phonetic') setSpeakMode('normal', document.getElementById('speakModeNormal'));
+  const recBtn = document.getElementById('recbtn'+idx);
+  if(recBtn){
+    recBtn.scrollIntoView({ behavior:'smooth', block:'center' });
+    setTimeout(()=>recBtn.click(), 250);
+  } else {
+    buildSpeakCards();
+    const retryBtn = document.getElementById('recbtn'+idx);
+    if(retryBtn) retryBtn.scrollIntoView({ behavior:'smooth', block:'center' });
+  }
+}
+
+function handlePronunciationOutcome(result, meta={}){
+  if(!result) return;
+  const pct = result.pct||0;
+  const mode = meta.mode||'normal';
+  const phraseKey = meta.phraseKey || ('anon:'+Date.now());
+  recordSpeakAttempt(phraseKey, pct);
+  const base = mode==='shadow' ? 8 : mode==='daily' ? 6 : 5;
+  const xpEarned = pct>=80 ? base+4 : pct>=60 ? base+1 : 2;
+  addXP(xpEarned, mode==='shadow'?'shadowing':'pronunciación');
+  if(pct>=60){ increaseCombo(); completeGoal(2); }
+  if(pct===100) earnBadge('perfect5');
+  updateSpeakStats();
+  if(speakMode!=='phonetic') buildSpeakCards();
+  renderSpeakWeakPanel();
+  saveState();
+}
+
+function toggleSpeakWeakOnly(btn){
+  speakWeakOnly = !speakWeakOnly;
+  if(btn) btn.classList.toggle('active', speakWeakOnly);
+  if(speakMode!=='phonetic') buildSpeakCards();
+}
 
 // ── SPEECH RECOGNITION SETUP ─────────────────────────────────
 const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -1156,6 +1287,7 @@ function buildSpeaking(){
   buildSpeakCards();
   buildPhonetics();
   updateSpeakStats();
+  renderSpeakWeakPanel();
 }
 
 // ── SENTENCE OF THE DAY ──────────────────────────────────────
@@ -1184,6 +1316,7 @@ function playSentenceOfDay(){
 
 let dailyMicTimer=null;
 function toggleDailyMic(){
+  const micBtn=document.getElementById('dailyMicBtn');
   const lbl=document.getElementById('dailyMicLabel');
   const st=document.getElementById('dailyStatus');
   const now=new Date();
@@ -1191,19 +1324,26 @@ function toggleDailyMic(){
   const idx=dayOfYear%SPEAKING.length;
   const p=SPEAKING[idx];
   if(srSupported){
-    startRecognition(p.de, null, lbl, st, ()=>{
-      addXP(5,'pronunciación'); completeGoal(2);
-      spPracticedToday++; spTotalSession++; updateSpeakStats();
-    });
+    startRecognition(p.de, null, micBtn, st, null, { mode:'daily', phraseKey:'daily:'+idx });
   } else {
     // Fallback timer
-    if(dailyMicTimer){ clearTimeout(dailyMicTimer); dailyMicTimer=null; if(lbl) lbl.textContent='Practicar'; if(st) st.textContent='✓ ¡Listo!'; addXP(5,'pronunciación'); completeGoal(2); spPracticedToday++; spTotalSession++; updateSpeakStats(); }
-    else{ if(lbl) lbl.textContent='Detener'; if(st) st.textContent='🔴 Grabando…'; dailyMicTimer=setTimeout(()=>{ dailyMicTimer=null; if(lbl) lbl.textContent='Practicar'; if(st) st.textContent='✓ ¡Grabado!'; addXP(5,'pronunciación'); completeGoal(2); spPracticedToday++; spTotalSession++; updateSpeakStats(); },4000); }
+    if(dailyMicTimer){
+      clearTimeout(dailyMicTimer); dailyMicTimer=null;
+      if(lbl) lbl.textContent='Practicar'; if(st) st.textContent='✓ ¡Listo!';
+      handlePronunciationOutcome({ pct:65 }, { mode:'daily', phraseKey:'daily:'+idx });
+    } else {
+      if(lbl) lbl.textContent='Detener'; if(st) st.textContent='🔴 Grabando…';
+      dailyMicTimer=setTimeout(()=>{
+        dailyMicTimer=null;
+        if(lbl) lbl.textContent='Practicar'; if(st) st.textContent='✓ ¡Grabado!';
+        handlePronunciationOutcome({ pct:65 }, { mode:'daily', phraseKey:'daily:'+idx });
+      },4000);
+    }
   }
 }
 
 // ── SPEECH RECOGNITION ENGINE ────────────────────────────────
-function startRecognition(targetText, audioId, btnEl, statusEl, onDone){
+function startRecognition(targetText, audioId, btnEl, statusEl, onDone, meta={}){
   // Stop any ongoing recognition
   if(activeRecognition){ try{ activeRecognition.stop(); }catch(e){} activeRecognition=null; }
 
@@ -1219,7 +1359,12 @@ function startRecognition(targetText, audioId, btnEl, statusEl, onDone){
   sr.maxAlternatives=3;
   activeRecognition=sr;
 
-  if(btnEl){ btnEl.textContent='⏹ Detener'; btnEl.classList.add('rec'); }
+  if(btnEl){
+    const label = btnEl.querySelector('#dailyMicLabel');
+    if(label) label.textContent='Detener';
+    else btnEl.textContent='⏹ Detener';
+    btnEl.classList.add('rec');
+  }
   if(statusEl) statusEl.textContent='🔴 Escuchando… Habla ahora en alemán';
 
   sr.onresult=function(e){
@@ -1235,9 +1380,15 @@ function startRecognition(targetText, audioId, btnEl, statusEl, onDone){
     }
     if(e.results[e.results.length-1].isFinal){
       activeRecognition=null;
-      if(btnEl){ btnEl.textContent='🎤 Reintentar'; btnEl.classList.remove('rec'); }
-      showPronFeedback(best, targetText, statusEl);
-      if(onDone) onDone(best);
+      if(btnEl){
+        const label = btnEl.querySelector('#dailyMicLabel');
+        if(label) label.textContent='Practicar';
+        else btnEl.textContent='🎤 Reintentar';
+        btnEl.classList.remove('rec');
+      }
+      const result = showPronFeedback(best, targetText, statusEl);
+      handlePronunciationOutcome(result, meta);
+      if(onDone) onDone(result);
     } else {
       // Show interim
       if(statusEl) statusEl.textContent='🎙️ ' + best;
@@ -1246,7 +1397,12 @@ function startRecognition(targetText, audioId, btnEl, statusEl, onDone){
 
   sr.onerror=function(e){
     activeRecognition=null;
-    if(btnEl){ btnEl.textContent='🎤 Reintentar'; btnEl.classList.remove('rec'); }
+    if(btnEl){
+      const label = btnEl.querySelector('#dailyMicLabel');
+      if(label) label.textContent='Practicar';
+      else btnEl.textContent='🎤 Reintentar';
+      btnEl.classList.remove('rec');
+    }
     const msgs={
       'no-speech':'No se detectó voz. ¿Está el micrófono activado?',
       'not-allowed':'Permiso de micrófono denegado. Actívalo en el navegador.',
@@ -1258,7 +1414,13 @@ function startRecognition(targetText, audioId, btnEl, statusEl, onDone){
 
   sr.onend=function(){
     if(activeRecognition===sr) activeRecognition=null;
-    if(btnEl && btnEl.classList.contains('rec')){ btnEl.textContent='🎤 Reintentar'; btnEl.classList.remove('rec'); if(statusEl && !statusEl.querySelector('.pron-result')) statusEl.textContent='⚠️ No se detectó voz. Inténtalo de nuevo.'; }
+    if(btnEl && btnEl.classList.contains('rec')){
+      const label = btnEl.querySelector('#dailyMicLabel');
+      if(label) label.textContent='Practicar';
+      else btnEl.textContent='🎤 Reintentar';
+      btnEl.classList.remove('rec');
+      if(statusEl && !statusEl.querySelector('.pron-result')) statusEl.textContent='⚠️ No se detectó voz. Inténtalo de nuevo.';
+    }
   };
 
   sr.start();
@@ -1314,28 +1476,42 @@ function showPronFeedback(heard, target, statusEl){
   else{               emoji='🔄'; msg='Escucha el original e inténtalo de nuevo.'; color='var(--coral)'; }
 
   html+='<div class="pron-score" style="color:'+color+'">'+emoji+' '+pct+'% — '+msg+'</div>';
+  const tips = getPronunciationCoaching(target, pct);
+  if(tips.length){
+    html+='<div class="sd-row" style="margin-top:8px;display:block;">'+tips.map(t=>'<div class="sd-tag orange" style="display:block;margin:4px 0;">'+escapeHTML(t)+'</div>').join('')+'</div>';
+  }
   html+='</div>';
 
   statusEl.innerHTML=html;
+  return { pct, heard, target };
+}
 
-  // XP based on score
-  const xpEarned=pct>=80?10:pct>=60?5:2;
-  addXP(xpEarned,'pronunciación');
-  if(pct>=60){ increaseCombo(); completeGoal(2); }
-  spPracticedToday++; spTotalSession++; updateSpeakStats();
-
-  // Badge check
-  if(pct===100) earnBadge('perfect5');
+function getPronunciationCoaching(target, pct){
+  if(pct>=85) return [];
+  const text = target.toLowerCase();
+  const tips = [];
+  if(/sch/.test(text)) tips.push('`sch` suena como "sh" suave (Schule, schön).');
+  if(/ch/.test(text)) tips.push('`ch` en ich es suave; en Bach es más fuerte desde la garganta.');
+  if(/[äöü]/.test(text) || /\bue|oe|ae\b/.test(text)) tips.push('Cuida las vocales umlaut: `ü` labios redondos, `ö` entre o/e, `ä` cercana a e.');
+  if(/\br|er\b/.test(text)) tips.push('La `r` final suele sonar suave, casi como una vocal corta.');
+  if(/sp|st/.test(text)) tips.push('Al inicio, `sp/st` suena como "shp/sht" (Sport, Stadt).');
+  if(/w/.test(text)) tips.push('En alemán, `w` suena como nuestra `v`.');
+  return tips.slice(0,2);
 }
 
 // ── SPEAK CARDS ──────────────────────────────────────────────
 function buildSpeakCards(){
   const c=document.getElementById('speakCards'); c.innerHTML='';
-  const phrases=speakLevelFilter==='all'?SPEAKING:SPEAKING.filter(p=>p.level===speakLevelFilter);
+  const phrases=getAdaptiveSpeakPhrases();
 
   let lastLevel='';
   phrases.forEach((p,i)=>{
     const realIdx=SPEAKING.indexOf(p);
+    const normalStats = S.speak.phraseStats['speak:'+realIdx] || { attempts:0, bestPct:0 };
+    const shadowStats = S.speak.phraseStats['shadow:'+realIdx] || { attempts:0, bestPct:0 };
+    const phraseBest = Math.max(normalStats.bestPct||0, shadowStats.bestPct||0);
+    const phraseAttempts = (normalStats.attempts||0) + (shadowStats.attempts||0);
+    const phraseMastered = !!normalStats.mastered && !!shadowStats.mastered;
     if(p.level!==lastLevel&&speakLevelFilter==='all'){
       lastLevel=p.level;
       const hdr=document.createElement('div'); hdr.className='speak-level-header';
@@ -1361,6 +1537,8 @@ function buildSpeakCards(){
         '</div>'+
         '<div class="speak-es">'+p.es+'</div>'+
         '<div class="speak-tip">💡 '+p.tip+'</div>'+
+        (phraseMastered?'<div class="sd-row"><span class="sd-tag green">✅ Dominada</span></div>':'')+
+        '<div class="pron-meta">Intentos: '+phraseAttempts+' · Mejor: '+phraseBest+'%</div>'+
         '<div class="pron-actions">'+
           '<button class="pron-listen-btn" onclick="speakGerman(\''+de_escaped+'\',\''+audioId+'\')">🔊 Escuchar primero</button>'+
           '<button class="pron-rec-btn" id="recbtn'+realIdx+'" onclick="startPronRec('+realIdx+',\''+de_escaped+'\',\''+audioId+'\')">'+
@@ -1381,12 +1559,13 @@ function startPronRec(idx, targetText, audioId){
 
   // If already recording, stop
   if(btn&&btn.classList.contains('rec')){
-    if(activeRecognition){ try{ activeRecognition.stop(); }catch(e){} }
+    if(activeRecognition){ try{ activeRecognition.stop(); }catch(err){ logWarn('startPronRec.stop', err); } }
+    if(btn._fallbackTimer){ clearTimeout(btn._fallbackTimer); btn._fallbackTimer=null; btn.classList.remove('rec'); btn.textContent='🎤 Practicar'; }
     return;
   }
 
   if(srSupported){
-    startRecognition(targetText, audioId, btn, st, null);
+    startRecognition(targetText, audioId, btn, st, null, { mode:'normal', phraseKey:'speak:'+idx });
   } else {
     // Fallback: just timer
     if(btn){ btn.textContent='⏹ Detener'; btn.classList.add('rec'); }
@@ -1394,8 +1573,7 @@ function startPronRec(idx, targetText, audioId){
     const t=setTimeout(()=>{
       if(btn){ btn.textContent='🎤 Practicar'; btn.classList.remove('rec'); }
       if(st) st.textContent='✓ ¡Grabado! Escúchate y repite.';
-      addXP(5,'pronunciación'); completeGoal(2);
-      spPracticedToday++; spTotalSession++; updateSpeakStats();
+      handlePronunciationOutcome({ pct:60 }, { mode:'normal', phraseKey:'speak:'+idx });
     },4000);
     if(btn) btn._fallbackTimer=t;
   }
@@ -1404,23 +1582,40 @@ function startPronRec(idx, targetText, audioId){
 function toggleMic(i){
   // Legacy fallback for daily card
   const mic=document.getElementById('mic'+i),st=document.getElementById('mics'+i);
-  if(micTimers[i]){ clearTimeout(micTimers[i]); mic&&mic.classList.remove('rec'); if(st) st.textContent='✓ ¡Grabado!'; micTimers[i]=null; addXP(5,'pronunciación'); completeGoal(2); spPracticedToday++; spTotalSession++; updateSpeakStats(); }
-  else{ mic&&mic.classList.add('rec'); if(st) st.textContent='🔴 Grabando…'; micTimers[i]=setTimeout(()=>{ mic&&mic.classList.remove('rec'); if(st) st.textContent='✓ ¡Grabado!'; micTimers[i]=null; addXP(5,'pronunciación'); completeGoal(2); spPracticedToday++; spTotalSession++; updateSpeakStats(); },4000); }
+  if(micTimers[i]){
+    clearTimeout(micTimers[i]); mic&&mic.classList.remove('rec');
+    if(st) st.textContent='✓ ¡Grabado!';
+    micTimers[i]=null;
+    handlePronunciationOutcome({ pct:60 }, { mode:'normal', phraseKey:'legacy:'+i });
+  } else {
+    mic&&mic.classList.add('rec');
+    if(st) st.textContent='🔴 Grabando…';
+    micTimers[i]=setTimeout(()=>{
+      mic&&mic.classList.remove('rec');
+      if(st) st.textContent='✓ ¡Grabado!';
+      micTimers[i]=null;
+      handlePronunciationOutcome({ pct:60 }, { mode:'normal', phraseKey:'legacy:'+i });
+    },4000);
+  }
 }
 
 function updateSpeakStats(){
-  const p=document.getElementById('sp-practiced'); if(p) p.textContent=spPracticedToday;
-  const t=document.getElementById('sp-total');     if(t) t.textContent=spTotalSession;
+  const p=document.getElementById('sp-practiced'); if(p) p.textContent=S.speak.practicedToday;
+  const t=document.getElementById('sp-total');     if(t) t.textContent=S.speak.totalAllTime;
 }
 
 // ── SHADOW MODE ───────────────────────────────────────────────
 function buildShadowCard(p,i){
   const step=shadowStep[i]||'ready';
+  const normalStats = S.speak.phraseStats['speak:'+i] || { mastered:false };
+  const shadowStats = S.speak.phraseStats['shadow:'+i] || { mastered:false };
+  const phraseMastered = !!normalStats.mastered && !!shadowStats.mastered;
   // Store in lookup — avoids all quote-escaping issues in onclick
   shadowData[i]={text:p.de, audioId:p.audioId||null};
   return '<div class="shadow-card">'+
     '<div class="speak-de">'+p.de+'</div>'+
     '<div class="speak-es">'+p.es+'</div>'+
+    (phraseMastered?'<div class="sd-row"><span class="sd-tag green">✅ Dominada</span></div>':'')+
     '<div class="shadow-steps">'+
       '<div class="shadow-step'+(step==='ready'||step==='listen'?' active':step==='speak'||step==='done'?' done':'')+'" id="ss1_'+i+'">'+
         '<span class="ss-num">1</span><span>Escuchar</span>'+
@@ -1469,9 +1664,7 @@ function shadowSpeak(i){
       startRecognition(d.text, null, btn, st, ()=>{
         shadowStep[i]='done';
         const s3=document.getElementById('ss3_'+i); if(s3) s3.classList.add('active');
-        addXP(8,'shadowing'); completeGoal(2);
-        spPracticedToday++; spTotalSession++; updateSpeakStats();
-      });
+      }, { mode:'shadow', phraseKey:'shadow:'+i });
     } else {
       btn._recording=true; btn.textContent='⏹ Detener';
       if(st) st.textContent='🔴 Grabando… ¡Habla ahora!';
@@ -1480,8 +1673,7 @@ function shadowSpeak(i){
         shadowStep[i]='done';
         if(st) st.textContent='✓ ¡Grabado! Compara con el original.';
         const s3=document.getElementById('ss3_'+i); if(s3) s3.classList.add('active');
-        addXP(8,'shadowing'); completeGoal(2);
-        spPracticedToday++; spTotalSession++; updateSpeakStats();
+        handlePronunciationOutcome({ pct:65 }, { mode:'shadow', phraseKey:'shadow:'+i });
       },4000);
     }
   }
